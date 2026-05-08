@@ -1,4 +1,20 @@
 Contains introduction to the project.
+
 Title: "Behind the API #1: Building a Multi-Node LLM Inference Platform"
+
+Purpose:
+- Introduce tokenkaki as a staged, runnable LLM inference platform portfolio project.
+- Explain the ecosystem in Singapore for inference optimization and engineering
+- Describe the end state: a deployable OpenAI-compatible inference endpoint with real backends, routing, observability, benchmarks, and cost controls.
+- Explain that every later post will include runnable artifacts, benchmark results, saved data, and interpretation.
+
+Scope for this post:
+- Motivation and personal gaps that the project targets.
+- High-level serving path from client to gateway to router to vLLM/SGLang backend to GPU metrics.
+- Real-backend-first principle.
+- Mock workers only as isolated test/load-generation utilities.
+- Phase model targets from small Qwen dev models through 8B public demos, reasoning, multimodal, larger single-node, multi-GPU, multi-node, MoE, and disaggregated serving.
+- Benchmarking stack: vLLM benchmark scripts, NVIDIA GenAI-Perf, Locust, Prometheus/Grafana, DCGM Exporter, and llm-d-benchmark for advanced phases.
+- Demo strategy: public limited live mode, authenticated live mode, benchmark mode, and replay/report mode for expensive experiments.
 
 Subsequent posts will be tagged to phases, always in the series "Behind the API #X".

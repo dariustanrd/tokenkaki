@@ -37,11 +37,19 @@ help answer questions such as:
 - How do benchmark results translate into deployment, scaling, and cost
   tradeoffs?
 
+Each stage should be explainable as a concrete systems artifact: working
+endpoint or deployment, benchmark evidence, saved results, and a
+blog-post-ready interpretation.
+
 ## Project Principles
 
 - Real backends are the normal serving path.
 - Mock workers are only for tests, synthetic load generation, and controlled
   benchmark scenarios.
+- Model targets depend on the phase; use small Qwen models for dev/CI, real
+  8B-class models for the primary public demo and industry baseline, then move
+  toward reasoning, multimodal, larger single-node, multi-GPU, multi-node, MoE,
+  and disaggregated serving studies as infrastructure allows.
 - Every stage must be runnable.
 - Every stage must produce benchmark evidence.
 - Every result should be written up with enough detail to reproduce and explain.

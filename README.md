@@ -16,11 +16,17 @@ measurements mean.
 - Keep mock workers isolated as test and benchmark utilities only.
 - Measure TTFT, TPOT, latency, throughput, errors, token counts, backend choice,
   and GPU metrics where available.
+- Choose model targets by phase: small Qwen models for dev/CI, an 8B-class real
+  backend for the primary public demo, comparable 8B baselines for credibility,
+  then reasoning, multimodal, larger single-node, multi-GPU, multi-node, MoE,
+  and disaggregated serving stages as infrastructure allows.
 - Progress from a single measured backend to routing, tuning, quantization,
   Kubernetes, multi-GPU, multi-node, cache-aware routing, and disaggregated
   serving studies.
 - Keep expensive live demos cost-controlled with auth, quotas, rate limits,
   replay mode, and clear teardown paths.
+- Publish each stage through the `Behind the API` blog series with runnable
+  artifacts, benchmark results, and technical interpretation.
 
 ## Documentation
 
