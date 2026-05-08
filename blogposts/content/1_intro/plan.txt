@@ -1,0 +1,4 @@
+Contains introduction to the project.
+Title: "Behind the API #1: Building a Multi-Node LLM Inference Platform"
+
+Subsequent posts will be tagged to phases, always in the series "Behind the API #X".

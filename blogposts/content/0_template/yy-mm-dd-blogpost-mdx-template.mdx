@@ -1,0 +1,99 @@
+---
+title: Your MDX Post Title
+publishedAt: YYYY-MM-DD
+summary: One or two sentences that explain what this post is about.
+tags:
+  - topic-one
+  - topic-two
+image: /posts/media/0_template/example-cover.svg
+---
+
+{/*
+Notes for this repo:
+- Use `.mdx` when you want custom components in addition to normal Markdown.
+- Supported custom components are: `Image`, `ImageGrid`, `StaticTweet`, `YouTube`, `Caption`, `Table`, and `Callout`.
+- Markdown images (`![](...)`) also work and render as zoomable images.
+- Example media lives in `docs/blogposts/media/0_template` and is referenced as `/posts/media/0_template/...`.
+*/}
+
+Write a short introduction that sets up the post and explains why the reader should care.
+
+<Callout emoji="!">
+Use MDX when the post needs richer media, embeds, or custom callouts alongside normal Markdown.
+</Callout>
+
+## Hero Image
+
+<Image
+  src="/posts/media/0_template/example-cover.svg"
+  alt="Describe the cover image"
+  width={1600}
+  height={900}
+/>
+
+<Caption>
+  Optional caption for the hero image.
+</Caption>
+
+## Main Section
+
+Normal Markdown still works here:
+
+- Bullet points
+- **Bold text**
+- [Links](https://example.com)
+- Footnotes[^1]
+
+[^1]: Footnotes still become sidenotes on wide screens.
+
+Inline math like $E = mc^2$ works, and block math works too:
+
+$$
+\sum_{i=1}^{n} i = \frac{n(n+1)}{2}
+$$
+
+## Gallery
+
+<ImageGrid
+  columns={2}
+  images={[
+    { src: "/posts/media/0_template/example-diagram.svg", alt: "Example diagram" },
+    { src: "/posts/media/0_template/example-screenshot.svg", alt: "Example screenshot" },
+  ]}
+/>
+
+## Embedded Media
+
+<YouTube videoId="wXhTHyIgQ_U" />
+
+<StaticTweet id="1617979122625712128" />
+
+## Custom Table
+
+<Table
+  data={{
+    headers: ["Item", "Why it matters"],
+    rows: [
+      ["Example A", "Short explanation of the first example."],
+      ["Example B", "Short explanation of the second example."],
+    ],
+  }}
+/>
+
+## Expandable Notes
+
+<details>
+<summary>Optional extra context</summary>
+
+Use this for transcripts, implementation notes, raw logs, or side explorations that should stay collapsed by default.
+
+```ts
+const message = "MDX code blocks work too";
+console.log(message);
+```
+
+</details>
+
+## Closing Thoughts
+
+Wrap up with the main takeaway, what changed for you, or where the reader should go next.

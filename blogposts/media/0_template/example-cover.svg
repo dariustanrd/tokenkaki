@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Example blog cover image</title>
+  <desc id="desc">A placeholder cover image for blog post templates.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="52%" stop-color="#164e63"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="72%" cy="28%" r="42%">
+      <stop offset="0%" stop-color="#fef3c7" stop-opacity="0.72"/>
+      <stop offset="100%" stop-color="#fef3c7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#glow)"/>
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-width="2">
+    <path d="M0 640 C260 560 400 760 650 650 S1050 440 1600 570"/>
+    <path d="M0 710 C250 630 420 820 690 710 S1080 500 1600 650"/>
+  </g>
+  <g transform="translate(140 210)">
+    <rect x="0" y="0" width="700" height="360" rx="32" fill="#020617" fill-opacity="0.42" stroke="#ffffff" stroke-opacity="0.18"/>
+    <text x="56" y="118" fill="#f8fafc" font-family="Georgia, serif" font-size="72" font-weight="700">Example Media</text>
+    <text x="60" y="184" fill="#cffafe" font-family="Verdana, sans-serif" font-size="30">Use this image path in frontmatter</text>
+    <text x="60" y="254" fill="#fed7aa" font-family="Menlo, Consolas, monospace" font-size="26">/posts/media/0_template/example-cover.svg</text>
+  </g>
+</svg>
