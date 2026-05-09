@@ -41,11 +41,14 @@ by or embedded inside `tokenkaki.gateway`.
    - Why: makes the real backend reproducible without turning vLLM into a `tokenkaki` runtime service.
    - Implication: the default dev path removes private-network gateway/backend noise while gateway code still treats vLLM as an external HTTP dependency.
 
-4. **Non-Streaming Chat Forwarding** - Pending
+4. **Non-Streaming Chat Forwarding** - Completed
    - Implement `POST /v1/chat/completions` for non-streaming requests.
    - Parse only `model`, `stream`, request ID, and routing/accounting fields.
    - Forward the original OpenAI-compatible body to external vLLM with minimal mutation, changing only backend model name when needed.
    - Add vLLM HTTP backend client; do not import or embed vLLM internals.
+   - Completed artifacts: `tokenkaki.backend` vLLM HTTP facade, non-streaming gateway chat route, public alias to backend model rewrite, request ID forwarding, explicit unknown-model/streaming-not-yet-supported/backend-timeout/backend-connection failure responses, and focused gateway/backend tests.
+   - Verified with: `uv run pytest tests/test_backend_vllm.py tests/test_gateway_chat.py tests/test_config_registry.py tests/test_gateway_models.py tests/test_gateway_skeleton.py`.
+   - Runtime validation still required on this GPU environment: start vLLM with `./deploy/vllm/run-openai-server.sh`, start the gateway with `uv run uvicorn tokenkaki.gateway:app --host 127.0.0.1 --port 8000`, then `curl` `POST /v1/chat/completions` through the gateway using public model alias `qwen3-0.6b`.
    - Why: validates the core request path through gateway to real backend.
    - Implication: failures are visible as gateway/backend evidence instead of hidden behind retries.
 
