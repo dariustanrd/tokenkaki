@@ -81,13 +81,21 @@ by or embedded inside `tokenkaki.gateway`.
    - Why: Milestone 1 should preserve evidence for learning, and metrics are the least invasive first step.
    - Implication: no auth, quotas, smart retries, failover, or broader error-policy changes are added yet.
 
-7. **Compose, Benchmark, And Experiment Artifact Path** - In Progress
-   - Completed Compose increment:
-     - Added `deploy/compose/` for gateway and Prometheus scraping only.
-     - vLLM remains a separately managed external GPU-backed server for Milestone 1.
-     - Added Compose-specific gateway config pointing from the gateway container to host vLLM through `http://host.docker.internal:8001`.
-     - Added Prometheus scrape config for gateway `/metrics`.
-     - Added Compose run and verification docs.
+7. **Compose, Benchmark, And Experiment Artifact Path** - Completed
+   - Added `deploy/compose/` for gateway and Prometheus scraping only.
+   - vLLM remains a separately managed external GPU-backed server for Milestone 1.
+   - Added Compose-specific gateway config pointing from the gateway container to host vLLM through `http://host.docker.internal:8001`.
+   - Added Prometheus scrape config for gateway `/metrics`.
+   - Added Compose run and verification docs.
+   - Added `.dockerignore` for small Docker build context.
+   - Added configurable published Compose ports through `TOKENKAKI_GATEWAY_PORT` and `TOKENKAKI_PROMETHEUS_PORT`.
+   - Added `benchmarks/vllm-gateway-serving.sh` using pinned `vllm bench serve` with OpenAI chat endpoint settings and raw JSON output under `experiments/001_vllm_gateway_baseline/raw/`.
+   - Added `benchmarks/README.md` with benchmark wrapper usage, smoke command, and provenance notes.
+   - Added `experiments/001_vllm_gateway_baseline/` with `README.md`, `commands.md`, `configs/`, `raw/`, `plots/`, and `report.md`.
+   - Documented benchmark wrapper arguments in `experiments/001_vllm_gateway_baseline/commands.md`, including gateway URL, public model alias, tokenizer model, prompt count, request rate, input/output token lengths, result path, and fixed vLLM chat endpoint options.
+   - Copied the exact gateway, Compose, Prometheus, vLLM launch, and benchmark wrapper configs used for the saved run into `experiments/001_vllm_gateway_baseline/configs/`.
+   - Saved raw benchmark and observability artifacts under `experiments/001_vllm_gateway_baseline/raw/`.
+   - Wrote the first benchmark interpretation in `experiments/001_vllm_gateway_baseline/report.md`.
    - Verified with:
      - `docker compose -f deploy/compose/compose.yaml config`.
      - `TOKENKAKI_GATEWAY_PORT=18000 TOKENKAKI_PROMETHEUS_PORT=19090 docker compose -f deploy/compose/compose.yaml up --build -d`.
@@ -97,9 +105,10 @@ by or embedded inside `tokenkaki.gateway`.
      - `curl 'http://127.0.0.1:19090/api/v1/targets?state=active'` showing Prometheus target health `up`.
      - A Compose chat request while vLLM was bound to host loopback produced the expected gateway `502` and backend connection failure metrics, confirming the failure is visible.
      - Restarted external vLLM with `VLLM_HOST=172.17.0.1 ./deploy/vllm/run-openai-server.sh`, then verified a successful non-streaming `/v1/chat/completions` request through the Compose gateway on `http://127.0.0.1:18000`.
-   - Pending:
-     - Add benchmark commands under `benchmarks/` using vLLM benchmark tooling against the gateway OpenAI chat endpoint.
-     - Add `experiments/001_vllm_gateway_baseline/` with `README.md`, `commands.md`, `configs/`, `raw/`, `plots/`, and `report.md`.
+     - Verified benchmark command shape with a one-request smoke run: `GATEWAY_BASE_URL=http://127.0.0.1:18000 NUM_PROMPTS=1 REQUEST_RATE=1 RANDOM_INPUT_LEN=16 RANDOM_OUTPUT_LEN=8 RESULT_FILENAME=vllm-gateway-serving-smoke.json ./benchmarks/vllm-gateway-serving.sh`.
+     - Saved raw smoke output at `experiments/001_vllm_gateway_baseline/raw/vllm-gateway-serving-smoke.json`.
+     - Ran a small non-smoke Compose benchmark: `GATEWAY_BASE_URL=http://127.0.0.1:18000 NUM_PROMPTS=10 REQUEST_RATE=1 RANDOM_INPUT_LEN=128 RANDOM_OUTPUT_LEN=64 RESULT_FILENAME=vllm-gateway-serving-compose-small.json ./benchmarks/vllm-gateway-serving.sh`.
+     - Saved `gateway-metrics-after-compose-small.prom` and `prometheus-targets-after-compose-small.json`.
    - Why: every stage must produce runnable/deployable code, a reproducible benchmark command, saved artifacts, and interpretation.
    - Implication: benchmark-observed latency, gateway-observed latency, backend usage, and GPU metrics are kept separate.
 
