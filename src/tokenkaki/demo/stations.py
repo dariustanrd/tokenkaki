@@ -7,7 +7,11 @@ from typing import Any
 STATIONS = {"gateway", "queue", "prefill", "decode", "metrics"}
 
 
-def station_facts(trace: dict[str, object], station: str) -> dict[str, object] | None:
+def station_facts(
+    trace: dict[str, object],
+    station: str,
+    reference_metrics: dict[str, object] | None = None,
+) -> dict[str, object] | None:
     """Return UI-ready facts for one inference railway station."""
     normalized = station.lower()
     if normalized not in STATIONS:
@@ -20,7 +24,10 @@ def station_facts(trace: dict[str, object], station: str) -> dict[str, object] |
         "decode": _decode_facts,
         "metrics": _metrics_facts,
     }
-    return builders[normalized](trace)
+    facts = builders[normalized](trace)
+    if reference_metrics is not None:
+        facts["reference_metrics"] = reference_metrics
+    return facts
 
 
 def _gateway_facts(trace: dict[str, object]) -> dict[str, object]:

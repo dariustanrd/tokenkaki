@@ -38,16 +38,19 @@ Out of scope remains: Adaption, Unsloth, LoRA, fine-tuning, Kubernetes, auth/quo
    - Demoable result: `/demo/runs/{id}/stations/{station}` returns measured or labeled-inferred facts for the selected station.
 
 3. **TB3: Grounded Station Explanation**
+   - Status: Implemented in working tree; pending review/commit.
    - Dependency: TB2.
-   - Add a demo endpoint that asks the base model to explain one station using capped session history plus station facts.
-   - Place measured facts last in the prompt and instruct the model not to invent missing metrics.
+   - Added a demo endpoint that asks the configured base model to explain one station using capped session history plus station facts.
+   - Places measured facts and benchmark references in the final user message and instructs the model not to invent missing metrics.
+   - Adds `POST /demo/runs/{request_id}/stations/{station}/explain`.
    - Demoable result: phone UI can ask “what happened here?” and receive a short trace-grounded answer.
 
 4. **TB4: Benchmark Reference Layer**
+   - Status: Implemented in working tree; pending review/commit.
    - Dependency: TB2; can parallelize with TB3.
-   - Parse saved `vllm bench serve` JSON artifacts from `experiments/001_vllm_gateway_baseline/raw/` or a hackathon-specific experiment folder.
-   - Expose a small benchmark summary endpoint for station reference data, for example latest benchmark TTFT, TPOT/ITL, throughput, request count, success rate, and latency percentiles.
-   - Attach benchmark summaries to station facts as `reference_metrics`, never as the user’s live trace metrics.
+   - Parses saved `vllm bench serve` JSON artifacts from `experiments/001_vllm_gateway_baseline/raw/`.
+   - Exposes `GET /demo/benchmarks/latest` for benchmark summary data.
+   - Attaches benchmark summaries to station facts as `reference_metrics`, never as the user’s live trace metrics.
    - Station mapping:
      - Prefill: benchmark TTFT distribution.
      - Decode: benchmark TPOT/ITL and output throughput.
@@ -79,8 +82,8 @@ Out of scope remains: Adaption, Unsloth, LoRA, fine-tuning, Kubernetes, auth/quo
 - Keep baseline: `uv run pytest`.
 - Completed TB1 tests for trace ticket creation, active train count, first chunk timing, and unknown run lookup.
 - Completed TB2 tests for station fact generation, measurement labels, streamed chunk count, and unknown station lookup.
-- Add backend tests for grounded prompt construction in TB3.
-- Add benchmark parser tests using a minimal saved `vllm bench serve` fixture and verify station `reference_metrics` preserve benchmark provenance.
+- Completed TB3 tests for grounded station explanation prompt construction through the gateway endpoint.
+- Completed TB4 parser tests using a minimal saved `vllm bench serve` fixture and station `reference_metrics` provenance checks.
 - Add streaming mock tests using the existing HTTPX mock backend pattern.
 - Add frontend smoke coverage for prompt submit, live train render, station inspection, and explanation display.
 - Acceptance target: one real model request through TokenKaki creates a train, records a trace, supports slowed replay, and explains all five station lenses.

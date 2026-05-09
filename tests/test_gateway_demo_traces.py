@@ -166,6 +166,117 @@ def test_demo_run_station_views_are_generated_from_same_trace(monkeypatch) -> No
     assert metrics["facts"]["status_code"] == 200
 
 
+def test_demo_run_station_includes_benchmark_reference_metrics(monkeypatch) -> None:
+    async def fake_forward_chat_completion(
+        route: ModelRoute,
+        body: dict[str, Any],
+        request_id: str,
+    ) -> BackendResponse:
+        return BackendResponse(
+            status_code=200,
+            content=b'{"id":"chatcmpl-test","object":"chat.completion"}',
+            media_type="application/json",
+        )
+
+    monkeypatch.setattr(gateway_app_module, "forward_chat_completion", fake_forward_chat_completion)
+    monkeypatch.setattr(
+        gateway_app_module,
+        "latest_benchmark_summary",
+        lambda: {
+            "source": "vllm_bench_serve",
+            "artifact_path": "raw/bench.json",
+            "provenance": "benchmark_observed",
+            "workload": {"completed": 10, "num_prompts": 10},
+            "latency_ms": {"mean_ttft": 42.9},
+            "throughput": {},
+            "tokens": {},
+        },
+    )
+    client = TestClient(create_app())
+
+    chat_response = client.post(
+        "/v1/chat/completions",
+        headers={"x-request-id": "req-reference-metrics"},
+        json={"model": "qwen3-8b", "messages": [{"role": "user", "content": "hi"}]},
+    )
+    station_response = client.get("/demo/runs/req-reference-metrics/stations/prefill")
+
+    assert chat_response.status_code == 200
+    assert station_response.status_code == 200
+    station = station_response.json()
+    assert station["measurement_basis"] == "gateway_inferred"
+    assert station["reference_metrics"]["provenance"] == "benchmark_observed"
+    assert station["reference_metrics"]["mean_ttft_ms"] == 42.9
+
+
+def test_demo_run_station_explanation_is_grounded_in_station_facts(monkeypatch) -> None:
+    captured: dict[str, Any] = {}
+
+    async def fake_forward_chat_completion(
+        route: ModelRoute,
+        body: dict[str, Any],
+        request_id: str,
+    ) -> BackendResponse:
+        captured["route"] = route
+        captured["body"] = body
+        captured["request_id"] = request_id
+        return BackendResponse(
+            status_code=200,
+            content=(
+                b'{"choices":[{"message":{"role":"assistant",'
+                b'"content":"Your request reached the gateway and was routed to vLLM."}}]}'
+            ),
+            media_type="application/json",
+        )
+
+    monkeypatch.setattr(gateway_app_module, "forward_chat_completion", fake_forward_chat_completion)
+    monkeypatch.setattr(
+        gateway_app_module,
+        "latest_benchmark_summary",
+        lambda: {
+            "source": "vllm_bench_serve",
+            "artifact_path": "raw/bench.json",
+            "provenance": "benchmark_observed",
+            "workload": {"gateway_base_url": "http://127.0.0.1:18000"},
+            "latency_ms": {},
+            "throughput": {},
+            "tokens": {},
+        },
+    )
+    client = TestClient(create_app())
+
+    chat_response = client.post(
+        "/v1/chat/completions",
+        headers={"x-request-id": "req-explain-123"},
+        json={"model": "qwen3-8b", "messages": [{"role": "user", "content": "hi"}]},
+    )
+    explain_response = client.post(
+        "/demo/runs/req-explain-123/stations/gateway/explain",
+        headers={"x-request-id": "req-explain-call-123"},
+        json={
+            "question": "What happened here?",
+            "history": [{"role": "user", "content": "Keep it simple."}],
+        },
+    )
+
+    assert chat_response.status_code == 200
+    assert explain_response.status_code == 200
+    payload = explain_response.json()
+    assert payload["request_id"] == "req-explain-123"
+    assert payload["station"] == "gateway"
+    assert payload["model"] == "qwen3-8b"
+    assert payload["explanation"] == "Your request reached the gateway and was routed to vLLM."
+    assert payload["station_facts"]["reference_metrics"]["provenance"] == "benchmark_observed"
+    assert captured["route"].backend_model == "Qwen/Qwen3-8B"
+    assert captured["request_id"] == "req-explain-call-123"
+    assert captured["body"]["model"] == "qwen3-8b"
+    assert captured["body"]["temperature"] == 0
+    prompt_text = captured["body"]["messages"][-1]["content"]
+    assert "Station facts JSON follows" in prompt_text
+    assert "req-explain-123" in prompt_text
+    assert "benchmark_observed" in prompt_text
+
+
 def test_demo_run_station_rejects_unknown_station(monkeypatch) -> None:
     async def fake_forward_chat_completion(
         route: ModelRoute,

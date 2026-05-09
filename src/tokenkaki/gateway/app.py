@@ -23,7 +23,14 @@ from tokenkaki.backend import (
     open_chat_completion_stream,
 )
 from tokenkaki.config import load_config
-from tokenkaki.demo import TraceStore, station_facts
+from tokenkaki.demo import (
+    TraceStore,
+    build_station_explanation_messages,
+    extract_chat_text,
+    latest_benchmark_summary,
+    station_facts,
+    station_reference_metrics,
+)
 from tokenkaki.registry import ModelRoute, list_public_models, resolve_model
 
 LOGGER = logging.getLogger("tokenkaki.gateway")
@@ -124,11 +131,98 @@ def create_app(config_path: str | None = None) -> FastAPI:
         if trace is None:
             return _error_response("not_found_error", f"unknown demo run: {request_id}", 404)
 
-        facts = station_facts(trace, station)
+        benchmark_summary = latest_benchmark_summary()
+        facts = station_facts(trace, station, station_reference_metrics(benchmark_summary, station))
         if facts is None:
             return _error_response("not_found_error", f"unknown station: {station}", 404)
         return Response(
             content=json.dumps(facts).encode("utf-8"),
+            status_code=200,
+            media_type="application/json",
+        )
+
+    @app.get("/demo/benchmarks/latest")
+    async def demo_latest_benchmark() -> Response:
+        summary = latest_benchmark_summary()
+        if summary is None:
+            return _error_response("not_found_error", "no benchmark summary artifact found", 404)
+        return Response(
+            content=json.dumps(summary).encode("utf-8"),
+            status_code=200,
+            media_type="application/json",
+        )
+
+    @app.post("/demo/runs/{request_id}/stations/{station}/explain")
+    async def demo_run_station_explain(request: Request, request_id: str, station: str) -> Response:
+        trace = app.state.trace_store.get(request_id)
+        if trace is None:
+            return _error_response("not_found_error", f"unknown demo run: {request_id}", 404)
+
+        benchmark_summary = latest_benchmark_summary()
+        facts = station_facts(trace, station, station_reference_metrics(benchmark_summary, station))
+        if facts is None:
+            return _error_response("not_found_error", f"unknown station: {station}", 404)
+
+        body = await request.json()
+        if not isinstance(body, dict):
+            return _error_response("invalid_request_error", "request body must be a JSON object", 400)
+
+        question = body.get("question")
+        if question is not None and not isinstance(question, str):
+            return _error_response("invalid_request_error", "question must be a string when set", 400)
+        history = body.get("history", [])
+        if not isinstance(history, list):
+            return _error_response("invalid_request_error", "history must be a list when set", 400)
+
+        model = trace.get("model")
+        if not isinstance(model, str):
+            return _error_response("server_error", "demo trace is missing model", 500)
+        route = resolve_model(app.state.config, model)
+        if route is None:
+            return _error_response("server_error", f"trace model is no longer enabled: {model}", 500)
+
+        explanation_body = {
+            "model": model,
+            "messages": build_station_explanation_messages(
+                station=facts,
+                question=question,
+                history=history,
+            ),
+            "temperature": 0,
+            "max_tokens": 160,
+            "chat_template_kwargs": {"enable_thinking": False},
+        }
+        try:
+            backend_response = await forward_chat_completion(
+                route,
+                explanation_body,
+                request_id=request.state.request_id,
+            )
+        except BackendTimeout:
+            return _error_response("server_error", "backend request timed out", 504)
+        except BackendConnectionFailure:
+            return _error_response("server_error", "backend connection failed", 502)
+
+        if backend_response.status_code >= 400:
+            return Response(
+                content=backend_response.content,
+                status_code=backend_response.status_code,
+                media_type=backend_response.media_type,
+            )
+
+        explanation = extract_chat_text(backend_response.content)
+        if explanation is None:
+            return _error_response("server_error", "backend response did not include explanation text", 502)
+        return Response(
+            content=json.dumps(
+                {
+                    "request_id": request_id,
+                    "station": facts["station"],
+                    "model": model,
+                    "explanation": explanation,
+                    "station_facts": facts,
+                }
+            ).encode("utf-8"),
             status_code=200,
             media_type="application/json",
         )
