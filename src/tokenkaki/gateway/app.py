@@ -23,6 +23,7 @@ from tokenkaki.backend import (
     open_chat_completion_stream,
 )
 from tokenkaki.config import load_config
+from tokenkaki.demo import TraceStore
 from tokenkaki.registry import ModelRoute, list_public_models, resolve_model
 
 LOGGER = logging.getLogger("tokenkaki.gateway")
@@ -63,6 +64,7 @@ def create_app(config_path: str | None = None) -> FastAPI:
     """Create the Milestone 1 gateway application."""
     app = FastAPI(title="tokenkaki gateway", version="0.1.0")
     app.state.config = load_config(config_path or os.getenv("TOKENKAKI_CONFIG"))
+    app.state.trace_store = TraceStore()
 
     @app.middleware("http")
     async def observe_requests(request: Request, call_next) -> Response:
@@ -105,6 +107,17 @@ def create_app(config_path: str | None = None) -> FastAPI:
     async def models() -> dict[str, object]:
         return {"object": "list", "data": list_public_models(app.state.config)}
 
+    @app.get("/demo/runs/{request_id}")
+    async def demo_run(request_id: str) -> Response:
+        trace = app.state.trace_store.get(request_id)
+        if trace is None:
+            return _error_response("not_found_error", f"unknown demo run: {request_id}", 404)
+        return Response(
+            content=json.dumps(trace).encode("utf-8"),
+            status_code=200,
+            media_type="application/json",
+        )
+
     @app.post("/v1/chat/completions")
     async def chat_completions(request: Request) -> Response:
         body = await request.json()
@@ -119,6 +132,14 @@ def create_app(config_path: str | None = None) -> FastAPI:
         if route is None:
             _record_chat_completion("404", "none", "none", "unknown_or_disabled_model")
             return _error_response("invalid_request_error", f"unknown or disabled model: {model}", 404)
+
+        app.state.trace_store.start(
+            request_id=request.state.request_id,
+            session_id=request.headers.get("x-tokenkaki-session-id"),
+            user_id=request.headers.get("x-tokenkaki-user-id"),
+            route=route,
+            stream=body.get("stream") is True,
+        )
 
         if body.get("stream") is True:
             return await _stream_chat_completion(request, route, body)
@@ -141,6 +162,11 @@ def create_app(config_path: str | None = None) -> FastAPI:
             )
             _record_backend_error(route, "backend_timeout", "backend_request_timeout", "none")
             _record_chat_completion("504", route.backend_base_url, route.routing_policy, "backend_timeout")
+            app.state.trace_store.fail(
+                request.state.request_id,
+                status_code=504,
+                error_class="backend_timeout",
+            )
             return _error_response("server_error", "backend request timed out", 504)
         except BackendConnectionFailure:
             LOGGER.warning(
@@ -153,6 +179,11 @@ def create_app(config_path: str | None = None) -> FastAPI:
             )
             _record_backend_error(route, "backend_connection_failure", "none", "none")
             _record_chat_completion("502", route.backend_base_url, route.routing_policy, "backend_connection_failure")
+            app.state.trace_store.fail(
+                request.state.request_id,
+                status_code=502,
+                error_class="backend_connection_failure",
+            )
             return _error_response("server_error", "backend connection failed", 502)
 
         _record_backend_tokens(route, backend_response.content)
@@ -164,6 +195,11 @@ def create_app(config_path: str | None = None) -> FastAPI:
                 route.routing_policy,
                 "backend_http_error",
             )
+            app.state.trace_store.fail(
+                request.state.request_id,
+                status_code=backend_response.status_code,
+                error_class="backend_http_error",
+            )
         else:
             _record_chat_completion(
                 str(backend_response.status_code),
@@ -171,11 +207,13 @@ def create_app(config_path: str | None = None) -> FastAPI:
                 route.routing_policy,
                 "none",
             )
+            app.state.trace_store.complete(request.state.request_id, status_code=backend_response.status_code)
 
         return Response(
             content=backend_response.content,
             status_code=backend_response.status_code,
             media_type=backend_response.media_type,
+            headers={"x-request-id": request.state.request_id},
         )
 
     return app
@@ -210,6 +248,11 @@ async def _stream_chat_completion(request: Request, route: ModelRoute, body: dic
         await exit_stack.aclose()
         _record_backend_error(route, "backend_timeout", "backend_stream_open_timeout", "none")
         _record_chat_completion("504", route.backend_base_url, route.routing_policy, "backend_timeout")
+        request.app.state.trace_store.fail(
+            request.state.request_id,
+            status_code=504,
+            error_class="backend_timeout",
+        )
         return _error_response("server_error", "backend stream timed out", 504)
     except BackendConnectionFailure:
         LOGGER.warning(
@@ -224,6 +267,11 @@ async def _stream_chat_completion(request: Request, route: ModelRoute, body: dic
         await exit_stack.aclose()
         _record_backend_error(route, "backend_connection_failure", "none", "none")
         _record_chat_completion("502", route.backend_base_url, route.routing_policy, "backend_connection_failure")
+        request.app.state.trace_store.fail(
+            request.state.request_id,
+            status_code=502,
+            error_class="backend_connection_failure",
+        )
         return _error_response("server_error", "backend stream connection failed", 502)
 
     LOGGER.info(
@@ -241,6 +289,7 @@ async def _stream_chat_completion(request: Request, route: ModelRoute, body: dic
         error_class = None
         try:
             async for chunk in backend_stream.chunks:
+                request.app.state.trace_store.mark_first_chunk(request.state.request_id)
                 yield chunk
         except asyncio.CancelledError:
             status = "client_disconnected"
@@ -282,7 +331,24 @@ async def _stream_chat_completion(request: Request, route: ModelRoute, body: dic
                 error_class or "none",
             ).observe(duration)
             if error_class is not None:
-                _record_backend_error(route, error_class, "backend_stream_read_timeout" if error_class == "backend_timeout" else "none", "none")
+                timeout_class = "backend_stream_read_timeout" if error_class == "backend_timeout" else "none"
+                _record_backend_error(route, error_class, timeout_class, "none")
+                request.app.state.trace_store.fail(
+                    request.state.request_id,
+                    status_code=backend_stream.status_code,
+                    error_class=error_class,
+                )
+            elif backend_stream.status_code >= 400:
+                request.app.state.trace_store.fail(
+                    request.state.request_id,
+                    status_code=backend_stream.status_code,
+                    error_class="backend_http_error",
+                )
+            else:
+                request.app.state.trace_store.complete(
+                    request.state.request_id,
+                    status_code=backend_stream.status_code,
+                )
             LOGGER.info(
                 "backend_stream_finished",
                 extra={
@@ -306,6 +372,7 @@ async def _stream_chat_completion(request: Request, route: ModelRoute, body: dic
         stream_body(),
         status_code=backend_stream.status_code,
         media_type=backend_stream.media_type or "text/event-stream",
+        headers={"x-request-id": request.state.request_id},
     )
 
 

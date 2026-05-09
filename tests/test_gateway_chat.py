@@ -115,7 +115,7 @@ def test_chat_completion_streams_backend_sse(monkeypatch) -> None:
         "/v1/chat/completions",
         headers={"x-request-id": "req-stream-123"},
         json={
-            "model": "qwen3-0.6b",
+            "model": "qwen3-8b",
             "stream": True,
             "messages": [{"role": "user", "content": "hi"}],
             "chat_template_kwargs": {"enable_thinking": False},
@@ -130,9 +130,9 @@ def test_chat_completion_streams_backend_sse(monkeypatch) -> None:
         b'data: {"choices":[{"delta":{"content":"answer"}}]}\n\n'
         b"data: [DONE]\n\n"
     )
-    assert captured["route"].backend_model == "Qwen/Qwen3-0.6B"
+    assert captured["route"].backend_model == "Qwen/Qwen3-8B"
     assert captured["body"] == {
-        "model": "qwen3-0.6b",
+        "model": "qwen3-8b",
         "stream": True,
         "messages": [{"role": "user", "content": "hi"}],
         "chat_template_kwargs": {"enable_thinking": False},
@@ -153,7 +153,7 @@ def test_chat_completion_maps_backend_timeout(monkeypatch) -> None:
 
     response = client.post(
         "/v1/chat/completions",
-        json={"model": "qwen3-0.6b", "messages": [{"role": "user", "content": "hi"}]},
+        json={"model": "qwen3-8b", "messages": [{"role": "user", "content": "hi"}]},
     )
 
     assert response.status_code == 504
@@ -173,7 +173,7 @@ def test_chat_completion_maps_backend_connection_failure(monkeypatch) -> None:
 
     response = client.post(
         "/v1/chat/completions",
-        json={"model": "qwen3-0.6b", "messages": [{"role": "user", "content": "hi"}]},
+        json={"model": "qwen3-8b", "messages": [{"role": "user", "content": "hi"}]},
     )
 
     assert response.status_code == 502
@@ -197,7 +197,7 @@ def test_chat_completion_records_backend_tokens_and_chat_metrics(monkeypatch) ->
 
     chat_response = client.post(
         "/v1/chat/completions",
-        json={"model": "qwen3-0.6b", "messages": [{"role": "user", "content": "hi"}]},
+        json={"model": "qwen3-8b", "messages": [{"role": "user", "content": "hi"}]},
     )
     metrics_response = client.get("/metrics")
 
