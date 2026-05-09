@@ -1,0 +1,15 @@
+.git/
+.pytest_cache/
+.uv-cache/
+.venv/
+__pycache__/
+*.py[cod]
+
+deploy/vllm/.venv/
+deploy/vllm/.uv-cache/
+
+benchmarks/.tmp/
+experiments/.tmp/
+
+*.log
+*.pid

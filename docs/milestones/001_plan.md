@@ -88,9 +88,16 @@ by or embedded inside `tokenkaki.gateway`.
      - Added Compose-specific gateway config pointing from the gateway container to host vLLM through `http://host.docker.internal:8001`.
      - Added Prometheus scrape config for gateway `/metrics`.
      - Added Compose run and verification docs.
-   - Verified with: `docker compose -f deploy/compose/compose.yaml config`.
+   - Verified with:
+     - `docker compose -f deploy/compose/compose.yaml config`.
+     - `TOKENKAKI_GATEWAY_PORT=18000 TOKENKAKI_PROMETHEUS_PORT=19090 docker compose -f deploy/compose/compose.yaml up --build -d`.
+     - `curl http://127.0.0.1:18000/healthz`.
+     - `curl http://127.0.0.1:18000/v1/models`.
+     - `curl http://127.0.0.1:18000/metrics`.
+     - `curl 'http://127.0.0.1:19090/api/v1/targets?state=active'` showing Prometheus target health `up`.
+     - A Compose chat request while vLLM was bound to host loopback produced the expected gateway `502` and backend connection failure metrics, confirming the failure is visible.
+     - Restarted external vLLM with `VLLM_HOST=172.17.0.1 ./deploy/vllm/run-openai-server.sh`, then verified a successful non-streaming `/v1/chat/completions` request through the Compose gateway on `http://127.0.0.1:18000`.
    - Pending:
-     - Run the Compose stack against the local external vLLM process and verify `/healthz`, `/v1/models`, `/v1/chat/completions`, `/metrics`, and Prometheus target health.
      - Add benchmark commands under `benchmarks/` using vLLM benchmark tooling against the gateway OpenAI chat endpoint.
      - Add `experiments/001_vllm_gateway_baseline/` with `README.md`, `commands.md`, `configs/`, `raw/`, `plots/`, and `report.md`.
    - Why: every stage must produce runnable/deployable code, a reproducible benchmark command, saved artifacts, and interpretation.

@@ -3,7 +3,6 @@ FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1
-ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 ENV PATH="/app/.venv/bin:${PATH}"
 
