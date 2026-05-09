@@ -23,6 +23,7 @@ class TraceTicket:
     active_requests_at_start: int
     first_chunk_at: float | None = None
     completed_at: float | None = None
+    streamed_chunk_count: int = 0
     status: str = "running"
     status_code: int | None = None
     error_class: str | None = None
@@ -73,6 +74,15 @@ class TraceStore:
             if ticket is not None and ticket.first_chunk_at is None:
                 ticket.first_chunk_at = perf_counter()
 
+    def record_stream_chunk(self, request_id: str) -> None:
+        with self._lock:
+            ticket = self._traces.get(request_id)
+            if ticket is None:
+                return
+            if ticket.first_chunk_at is None:
+                ticket.first_chunk_at = perf_counter()
+            ticket.streamed_chunk_count += 1
+
     def complete(self, request_id: str, *, status_code: int) -> None:
         self._finish(request_id, status="completed", status_code=status_code, error_class=None)
 
@@ -122,6 +132,7 @@ def _serialize(ticket: TraceTicket) -> dict[str, object]:
         "status_code": ticket.status_code,
         "error_class": ticket.error_class,
         "active_requests_at_start": ticket.active_requests_at_start,
+        "streamed_chunk_count": ticket.streamed_chunk_count,
         "timings_ms": {
             "first_chunk": first_chunk_ms,
             "total": total_latency_ms,

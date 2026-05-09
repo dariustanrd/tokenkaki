@@ -23,7 +23,7 @@ from tokenkaki.backend import (
     open_chat_completion_stream,
 )
 from tokenkaki.config import load_config
-from tokenkaki.demo import TraceStore
+from tokenkaki.demo import TraceStore, station_facts
 from tokenkaki.registry import ModelRoute, list_public_models, resolve_model
 
 LOGGER = logging.getLogger("tokenkaki.gateway")
@@ -114,6 +114,21 @@ def create_app(config_path: str | None = None) -> FastAPI:
             return _error_response("not_found_error", f"unknown demo run: {request_id}", 404)
         return Response(
             content=json.dumps(trace).encode("utf-8"),
+            status_code=200,
+            media_type="application/json",
+        )
+
+    @app.get("/demo/runs/{request_id}/stations/{station}")
+    async def demo_run_station(request_id: str, station: str) -> Response:
+        trace = app.state.trace_store.get(request_id)
+        if trace is None:
+            return _error_response("not_found_error", f"unknown demo run: {request_id}", 404)
+
+        facts = station_facts(trace, station)
+        if facts is None:
+            return _error_response("not_found_error", f"unknown station: {station}", 404)
+        return Response(
+            content=json.dumps(facts).encode("utf-8"),
             status_code=200,
             media_type="application/json",
         )
@@ -289,7 +304,7 @@ async def _stream_chat_completion(request: Request, route: ModelRoute, body: dic
         error_class = None
         try:
             async for chunk in backend_stream.chunks:
-                request.app.state.trace_store.mark_first_chunk(request.state.request_id)
+                request.app.state.trace_store.record_stream_chunk(request.state.request_id)
                 yield chunk
         except asyncio.CancelledError:
             status = "client_disconnected"
