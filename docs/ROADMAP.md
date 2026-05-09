@@ -48,11 +48,17 @@ Repository foundation:
 
 Deployment target:
 
-- Gateway, Prometheus, and benchmark tooling run locally via Docker Compose.
+- Gateway, Prometheus, and benchmark tooling can run locally via Docker Compose
+  for fast development.
+- The same repo should support moving gateway, Prometheus, benchmark tooling,
+  and vLLM onto the remote GPU machine for single-node validation.
 - Grafana is optional in Milestone 1 and becomes required once routing or
   GPU/system correlation is being analyzed.
 - vLLM runs as a real GPU-backed service, either on the same GPU host or on a
   rented single-GPU node.
+- Early development may use macOS gateway -> remote vLLM over Tailscale; later
+  Milestone 1 validation should include a same-host gateway -> vLLM placement to
+  remove Tailnet latency from the gateway/backend path.
 - The gateway connects to an external vLLM server over its OpenAI-compatible
   HTTP endpoint.
 - The gateway uses a small static config-backed registry for public model
@@ -70,6 +76,7 @@ Outputs:
 - real vLLM backend integration, using Phase 0 or Phase 1 model targets
 - Docker Compose deployment for gateway, Prometheus scraping, and benchmark
   support, with configurable remote/local vLLM backend URL
+- remote GPU setup/run artifacts for vLLM under `deploy/vllm/`
 - `/v1/models` and `/v1/chat/completions`
 - streaming and non-streaming chat completion support
 - Prometheus metrics for request count, errors, latency, selected backend, and

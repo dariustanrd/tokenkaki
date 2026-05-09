@@ -56,6 +56,14 @@ OpenAI-compatible requests to real backend engines with minimal mutation and
 parses only the envelope needed for gateway responsibilities: endpoint, model,
 streaming mode, request context, routing inputs, and accounting data.
 
+Component placement is a deployment concern rather than a code boundary. During
+early development the gateway may run on macOS while vLLM runs on a remote GPU
+machine over Tailscale. The same code path should also support running the
+gateway, vLLM, metrics stack, and benchmarks on the GPU host, on a rented
+single-node GPU VM, or later across a cluster. Configured backend addresses and
+deployment artifacts should change across those modes; gateway architecture
+should not.
+
 Telemetry is emitted alongside the serving path rather than after it:
 
 ```text
@@ -154,14 +162,18 @@ first-class without mixing them into serving code:
 benchmarks/
 deploy/
   compose/
+  vllm/
 experiments/
 scripts/
 tests/
 ```
 
-`deploy/compose/` is the initial deployment surface. Kubernetes-family manifests
-should be deferred until the first kind, k3s, k3d, or cloud Kubernetes
-experiment, and should then live under `deploy/kubernetes/`.
+`deploy/compose/` is the initial gateway and observability deployment surface.
+`deploy/vllm/` may contain setup and run artifacts for an external vLLM backend
+on a local, remote, or rented GPU machine. It must not turn vLLM into code
+imported by `tokenkaki.gateway`. Kubernetes-family manifests should be deferred
+until the first kind, k3s, k3d, or cloud Kubernetes experiment, and should then
+live under `deploy/kubernetes/`.
 
 The package should use deep modules: small public interfaces with implementation
 details hidden inside each module. Use functional facades by default, Protocols
@@ -190,6 +202,12 @@ handoff, metrics emission, and calls to backend clients.
 Do not make benchmark runners or mock workers initial runtime services. They may
 be executable tools or test fixtures, but service extraction should happen only
 after there is a concrete deployment, scaling, or lifecycle reason.
+
+vLLM is a real runtime process, but it is an external backend owned by deployment
+artifacts and environment setup, not by the `tokenkaki` Python package. The
+gateway should work whether the configured vLLM URL points to loopback, a
+Tailscale hostname, a private cloud address, or a Kubernetes service discovered
+in a later milestone.
 
 ## Backend Rule
 

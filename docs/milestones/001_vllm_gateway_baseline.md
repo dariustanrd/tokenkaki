@@ -32,6 +32,14 @@ client, demo UI, or benchmark runner
 The gateway is the only `tokenkaki` runtime service. vLLM is a separately
 managed serving engine reachable over HTTP.
 
+Component placement may change without changing this boundary. Early
+development may run the gateway on macOS and vLLM on a remote NVIDIA GPU host
+over Tailscale. Later Milestone 1 validation should also support running the
+gateway, vLLM, metrics stack, and benchmark tooling on the same remote GPU
+machine, and future milestones may move the same roles onto rented GPU VMs or
+clusters. These are deployment placements, not different application
+architectures.
+
 ## Request Handling
 
 The gateway should behave as a transparent OpenAI-compatible forwarding layer
@@ -125,6 +133,12 @@ Gateway metrics, benchmark measurements, backend usage, and GPU metrics are
 related signals, but none of them is the single source of truth for the whole
 serving path.
 
+Every saved experiment should record where the benchmark runner, gateway, vLLM
+backend, and metrics stack ran, plus the network path between them. A
+Mac-to-remote-vLLM run over Tailscale is useful gateway-path evidence, but it is
+not the same measurement as a same-host gateway-to-vLLM run or a backend-only
+vLLM benchmark.
+
 ## Failure Policy
 
 Milestone 1 should fail loudly and preserve evidence.
@@ -144,6 +158,7 @@ means errors are visible in metrics, logs, and saved benchmark artifacts.
 
 - runnable FastAPI gateway
 - external vLLM backend config
+- remote GPU vLLM setup/run artifacts under `deploy/vllm/`
 - Docker Compose deployment for gateway, Prometheus scraping, and benchmark
   support
 - configurable local or remote vLLM backend URL

@@ -63,6 +63,8 @@ What do we expect to happen, and why?
 - Model:
 - Hardware:
 - Deployment:
+- Placement:
+- Network path:
 - Routing policy:
 
 ## Workload
@@ -93,6 +95,11 @@ What would this imply for deployment, scaling, reliability, or cost?
 
 - Keep raw benchmark outputs.
 - Record model, backend version, hardware, and deployment mode.
+- Record component placement: where the benchmark runner, gateway, backend, and
+  metrics stack ran.
+- Record the network path between benchmark runner, gateway, and backend,
+  including Tailscale, loopback, private cloud networking, or Kubernetes
+  service networking.
 - Record command lines used to run benchmarks.
 - For product-path measurements, run benchmarks against the public gateway
   endpoint rather than directly against the backend engine.
