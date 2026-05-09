@@ -178,3 +178,36 @@ def test_chat_completion_maps_backend_connection_failure(monkeypatch) -> None:
 
     assert response.status_code == 502
     assert response.json()["error"]["message"] == "backend connection failed"
+
+
+def test_chat_completion_records_backend_tokens_and_chat_metrics(monkeypatch) -> None:
+    async def fake_forward_chat_completion(
+        route: ModelRoute,
+        body: dict[str, Any],
+        request_id: str,
+    ) -> BackendResponse:
+        return BackendResponse(
+            status_code=200,
+            content=b'{"id":"chatcmpl-test","usage":{"prompt_tokens":3,"completion_tokens":5,"total_tokens":8}}',
+            media_type="application/json",
+        )
+
+    monkeypatch.setattr(gateway_app_module, "forward_chat_completion", fake_forward_chat_completion)
+    client = TestClient(create_app())
+
+    chat_response = client.post(
+        "/v1/chat/completions",
+        json={"model": "qwen3-0.6b", "messages": [{"role": "user", "content": "hi"}]},
+    )
+    metrics_response = client.get("/metrics")
+
+    assert chat_response.status_code == 200
+    assert "tokenkaki_gateway_chat_completions_total" in metrics_response.text
+    assert (
+        'routing_policy="static_single_backend",selected_backend="http://127.0.0.1:8001",'
+        'token_type="prompt"'
+    ) in metrics_response.text
+    assert (
+        'routing_policy="static_single_backend",selected_backend="http://127.0.0.1:8001",'
+        'token_type="completion"'
+    ) in metrics_response.text

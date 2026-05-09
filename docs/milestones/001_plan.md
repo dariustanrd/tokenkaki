@@ -65,13 +65,21 @@ by or embedded inside `tokenkaki.gateway`.
    - Why: streaming is an early serving-path requirement, not a later enhancement.
    - Implication: TTFT/TPOT remain benchmark-observed metrics; gateway metrics track stream lifecycle. Truncated Qwen3 thinking outputs are backend/model behavior, so the gateway should not silently strip `<think>` content, raise `max_tokens`, or fabricate an answer.
 
-6. **Fail-Loud Error And Metrics Contract** - Pending
-   - Return clear OpenAI-compatible error envelopes for unknown model, disabled model, backend HTTP error, timeout, connection failure, and unexpected gateway error.
-   - Add evidence-preserving handling for model-specific generation pitfalls where useful, starting with an optional Qwen3 warning or validation when `enable_thinking: true` is paired with a low `max_tokens`.
-   - Log request ID, selected backend, status, timeout class, and error class.
-   - Emit Prometheus metrics for request count, status, selected backend, routing policy, latency, stream duration, backend errors, and token counts when available.
-   - Why: Milestone 1 should preserve evidence for learning.
-   - Implication: no auth, quotas, smart retries, or failover are added yet.
+6. **Fail-Loud Error And Metrics Contract** - Partial
+   - Completed metrics increment:
+     - Emit Prometheus chat completion request counts labeled by status, selected backend, routing policy, and error class.
+     - Emit Prometheus backend error counts labeled by selected backend, routing policy, error class, timeout class, and backend HTTP status when available.
+     - Emit Prometheus stream duration histograms for streaming requests labeled by selected backend, routing policy, stream status, and error class.
+     - Emit Prometheus backend-reported token counters for prompt, completion, and total tokens when non-streaming responses include OpenAI-compatible `usage`.
+     - Preserved existing gateway behavior for unknown/disabled models, backend HTTP responses, timeout envelopes, and connection failure envelopes.
+   - Verified with: `uv run pytest tests/test_config_registry.py tests/test_gateway_chat.py tests/test_gateway_skeleton.py`, `uv run pytest`, and a manual non-streaming request through the gateway showing chat completion and token metrics in `/metrics`.
+   - Deferred/skipped for a later Slice 6 increment:
+     - Do not yet split unknown model vs disabled model error envelopes.
+     - Do not yet remap backend HTTP 4xx/5xx responses into gateway-owned error envelopes.
+     - Do not yet add Qwen3 low-`max_tokens` thinking-mode warning or validation.
+     - Do not yet add per-request token histograms; use cumulative Prometheus counters and add per-request values later through structured logs or tracing when needed.
+   - Why: Milestone 1 should preserve evidence for learning, and metrics are the least invasive first step.
+   - Implication: no auth, quotas, smart retries, failover, or broader error-policy changes are added yet.
 
 7. **Compose, Benchmark, And Experiment Artifact Path** - Pending
    - Add `deploy/compose/` for gateway and Prometheus scraping only; vLLM remains a separately managed GPU-backed server on this machine for Milestone 1.

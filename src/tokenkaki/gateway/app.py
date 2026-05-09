@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import AsyncExitStack
+import json
 import logging
 import os
 import time
@@ -35,6 +36,26 @@ REQUEST_LATENCY_SECONDS = Histogram(
     "tokenkaki_gateway_request_latency_seconds",
     "Gateway-observed HTTP request latency in seconds.",
     ("method", "path"),
+)
+CHAT_COMPLETION_COUNT = Counter(
+    "tokenkaki_gateway_chat_completions_total",
+    "Gateway-observed chat completion requests.",
+    ("status", "selected_backend", "routing_policy", "error_class"),
+)
+BACKEND_ERROR_COUNT = Counter(
+    "tokenkaki_gateway_backend_errors_total",
+    "Gateway-observed backend errors.",
+    ("selected_backend", "routing_policy", "error_class", "timeout_class", "backend_status"),
+)
+STREAM_DURATION_SECONDS = Histogram(
+    "tokenkaki_gateway_stream_duration_seconds",
+    "Gateway-observed chat completion stream duration in seconds.",
+    ("selected_backend", "routing_policy", "stream_status", "error_class"),
+)
+TOKEN_COUNT = Counter(
+    "tokenkaki_gateway_backend_tokens_total",
+    "Backend-reported token counts observed by the gateway.",
+    ("selected_backend", "routing_policy", "token_type"),
 )
 
 
@@ -96,6 +117,7 @@ def create_app(config_path: str | None = None) -> FastAPI:
 
         route = resolve_model(app.state.config, model)
         if route is None:
+            _record_chat_completion("404", "none", "none", "unknown_or_disabled_model")
             return _error_response("invalid_request_error", f"unknown or disabled model: {model}", 404)
 
         if body.get("stream") is True:
@@ -117,6 +139,8 @@ def create_app(config_path: str | None = None) -> FastAPI:
                     "timeout_class": "backend_request_timeout",
                 },
             )
+            _record_backend_error(route, "backend_timeout", "backend_request_timeout", "none")
+            _record_chat_completion("504", route.backend_base_url, route.routing_policy, "backend_timeout")
             return _error_response("server_error", "backend request timed out", 504)
         except BackendConnectionFailure:
             LOGGER.warning(
@@ -127,7 +151,26 @@ def create_app(config_path: str | None = None) -> FastAPI:
                     "error_class": "backend_connection_failure",
                 },
             )
+            _record_backend_error(route, "backend_connection_failure", "none", "none")
+            _record_chat_completion("502", route.backend_base_url, route.routing_policy, "backend_connection_failure")
             return _error_response("server_error", "backend connection failed", 502)
+
+        _record_backend_tokens(route, backend_response.content)
+        if backend_response.status_code >= 400:
+            _record_backend_error(route, "backend_http_error", "none", str(backend_response.status_code))
+            _record_chat_completion(
+                str(backend_response.status_code),
+                route.backend_base_url,
+                route.routing_policy,
+                "backend_http_error",
+            )
+        else:
+            _record_chat_completion(
+                str(backend_response.status_code),
+                route.backend_base_url,
+                route.routing_policy,
+                "none",
+            )
 
         return Response(
             content=backend_response.content,
@@ -165,6 +208,8 @@ async def _stream_chat_completion(request: Request, route: ModelRoute, body: dic
             },
         )
         await exit_stack.aclose()
+        _record_backend_error(route, "backend_timeout", "backend_stream_open_timeout", "none")
+        _record_chat_completion("504", route.backend_base_url, route.routing_policy, "backend_timeout")
         return _error_response("server_error", "backend stream timed out", 504)
     except BackendConnectionFailure:
         LOGGER.warning(
@@ -177,6 +222,8 @@ async def _stream_chat_completion(request: Request, route: ModelRoute, body: dic
             },
         )
         await exit_stack.aclose()
+        _record_backend_error(route, "backend_connection_failure", "none", "none")
+        _record_chat_completion("502", route.backend_base_url, route.routing_policy, "backend_connection_failure")
         return _error_response("server_error", "backend stream connection failed", 502)
 
     LOGGER.info(
@@ -228,6 +275,14 @@ async def _stream_chat_completion(request: Request, route: ModelRoute, body: dic
             raise
         finally:
             duration = time.perf_counter() - stream_started_at
+            STREAM_DURATION_SECONDS.labels(
+                route.backend_base_url,
+                route.routing_policy,
+                status,
+                error_class or "none",
+            ).observe(duration)
+            if error_class is not None:
+                _record_backend_error(route, error_class, "backend_stream_read_timeout" if error_class == "backend_timeout" else "none", "none")
             LOGGER.info(
                 "backend_stream_finished",
                 extra={
@@ -241,11 +296,59 @@ async def _stream_chat_completion(request: Request, route: ModelRoute, body: dic
             )
             await exit_stack.aclose()
 
+    if backend_stream.status_code >= 400:
+        _record_backend_error(route, "backend_http_error", "none", str(backend_stream.status_code))
+        error_class = "backend_http_error"
+    else:
+        error_class = "none"
+    _record_chat_completion(str(backend_stream.status_code), route.backend_base_url, route.routing_policy, error_class)
     return StreamingResponse(
         stream_body(),
         status_code=backend_stream.status_code,
         media_type=backend_stream.media_type or "text/event-stream",
     )
+
+
+def _record_chat_completion(status: str, selected_backend: str, routing_policy: str, error_class: str) -> None:
+    CHAT_COMPLETION_COUNT.labels(status, selected_backend, routing_policy, error_class).inc()
+
+
+def _record_backend_error(
+    route: ModelRoute,
+    error_class: str,
+    timeout_class: str,
+    backend_status: str,
+) -> None:
+    BACKEND_ERROR_COUNT.labels(
+        route.backend_base_url,
+        route.routing_policy,
+        error_class,
+        timeout_class,
+        backend_status,
+    ).inc()
+
+
+def _record_backend_tokens(route: ModelRoute, content: bytes) -> None:
+    try:
+        payload = json.loads(content)
+    except json.JSONDecodeError:
+        return
+
+    if not isinstance(payload, dict):
+        return
+    usage = payload.get("usage")
+    if not isinstance(usage, dict):
+        return
+
+    token_fields = {
+        "prompt_tokens": "prompt",
+        "completion_tokens": "completion",
+        "total_tokens": "total",
+    }
+    for field_name, token_type in token_fields.items():
+        value = usage.get(field_name)
+        if isinstance(value, int) and value >= 0:
+            TOKEN_COUNT.labels(route.backend_base_url, route.routing_policy, token_type).inc(value)
 
 
 def _error_response(error_type: str, message: str, status_code: int) -> Response:
@@ -257,8 +360,6 @@ def _error_response(error_type: str, message: str, status_code: int) -> Response
 
 
 def _json_error(error_type: str, message: str) -> bytes:
-    import json
-
     return json.dumps(
         {
             "error": {
