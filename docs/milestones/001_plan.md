@@ -30,11 +30,14 @@ by or embedded inside `tokenkaki.gateway`.
    - Why: establishes the bootstrap registry without pretending config is long-term runtime state.
    - Implication: health/load/backend model lists stay runtime signals for later milestones.
 
-3. **Local GPU vLLM Dev-Lab Setup** - Pending
+3. **Local GPU vLLM Dev-Lab Setup** - Completed
    - Add `deploy/vllm/` setup docs and scripts for running external vLLM on this Linux NVIDIA GPU machine from the working repo clone.
    - Include environment examples for the default dev model `Qwen/Qwen3-0.6B`, bind host, port, and any model/cache paths needed by the GPU machine.
    - Prefer loopback or private-host binding for Milestone 1 development, with any remote client access documented as optional and explicitly separate from baseline measurement.
    - Add smoke-test commands for direct local vLLM `/v1/models` and `/v1/chat/completions` calls before routing traffic through the gateway.
+   - Completed artifacts: `deploy/vllm/README.md`, `deploy/vllm/env.example`, `deploy/vllm/pyproject.toml`, `deploy/vllm/uv.lock`, `deploy/vllm/run-openai-server.sh`, and `deploy/vllm/smoke-openai.sh`.
+   - Verified with: `UV_TORCH_BACKEND=cu118 uv lock` in `deploy/vllm/`, `bash -n deploy/vllm/run-openai-server.sh`, `bash -n deploy/vllm/smoke-openai.sh`, executable-bit checks for both scripts, and `CUDA_VISIBLE_DEVICES=4` PyTorch visibility showing one logical A100.
+   - Runtime validation still required on this GPU environment: run `UV_TORCH_BACKEND=cu118 uv sync --frozen` in `deploy/vllm/`, start `./deploy/vllm/run-openai-server.sh`, then run `./deploy/vllm/smoke-openai.sh`.
    - Why: makes the real backend reproducible without turning vLLM into a `tokenkaki` runtime service.
    - Implication: the default dev path removes private-network gateway/backend noise while gateway code still treats vLLM as an external HTTP dependency.
 
