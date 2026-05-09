@@ -98,6 +98,34 @@ What would this imply for deployment, scaling, reliability, or cost?
 - Do not compare mock-worker results as if they were real model-serving results.
 - Include cost notes for rented GPU experiments.
 
+## Experiment Directory Layout
+
+Store saved results in milestone experiment folders. Each folder should be able
+to explain what ran, how to rerun it, what artifacts were produced, and what the
+result means.
+
+```text
+experiments/
+  001_vllm_gateway_baseline/
+    README.md
+    commands.md
+    configs/
+    raw/
+    plots/
+    report.md
+```
+
+- `README.md`: short purpose, stage, backend, model, hardware, and status.
+- `commands.md`: exact commands and environment assumptions.
+- `configs/`: benchmark, gateway, backend, and deployment configuration used.
+- `raw/`: JSON, CSV, logs, metrics snapshots, and unmodified benchmark outputs.
+- `plots/`: generated figures and summary tables.
+- `report.md`: hypothesis, setup, workload, results, interpretation, and
+  production lessons.
+
+Synthetic, replayed, or mock-backed artifacts must be labeled in the folder
+README and report.
+
 ## Benchmark Tooling
 
 Benchmark tools are chosen by phase and by what layer needs to be measured.

@@ -9,6 +9,35 @@ realistic OpenAI-compatible serving systems. Prefer changes that improve the
 request path, backend integration, routing, observability, benchmarking,
 deployment realism, or experiment quality.
 
+## Repository Structure Rules
+
+- Use a Python-first package layout under `src/tokenkaki/`.
+- Use `uv` for Python package and dependency management.
+- Treat `tokenkaki.gateway` as the only initial runtime service.
+- Keep initial deployment artifacts under `deploy/compose/`.
+- Add `deploy/kubernetes/` only when a kind, k3s, k3d, or cloud Kubernetes
+  experiment starts.
+- Keep benchmark commands under `benchmarks/`.
+- Keep saved experiment artifacts under numbered milestone folders in
+  `experiments/`.
+- Do not introduce top-level `services/` until a component needs independent
+  deployment, scaling, ownership, or lifecycle.
+- Do not introduce Rust or another implementation language unless a measured
+  bottleneck or integration requirement justifies it.
+
+## Module Design Rules
+
+- Prefer deep modules: small public interfaces with substantial implementation
+  hidden inside the module.
+- Use functional facades by default for router, config, observability, and
+  artifact helpers.
+- Use Python Protocols only for true interchangeable boundaries such as backend
+  clients.
+- Use stateful service objects only when a component owns lifecycle, resources,
+  or mutable state.
+- Avoid shallow pass-through classes and broad cross-module imports that make
+  implementation details part of another module's interface.
+
 ## Serving Code Rules
 
 - Real backend clients are the default serving path.

@@ -31,6 +31,18 @@ phase, especially for multimodal, FP8, MoE, and disaggregated serving work.
 Learning objective: understand the request path from OpenAI-compatible API
 gateway to a real vLLM backend and measure baseline serving behavior.
 
+Repository foundation:
+
+- `uv` for Python package and dependency management
+- Python-first package under `src/tokenkaki/`
+- one initial runtime service: `tokenkaki.gateway`
+- deep modules for gateway, router, backends, registry, observability, auth, and
+  config
+- benchmark tooling under `benchmarks/`
+- saved Milestone 1 artifacts under `experiments/001_vllm_gateway_baseline/`
+- deployment artifacts under `deploy/compose/`, with Kubernetes-family manifests
+  deferred until a kind, k3s, k3d, or cloud Kubernetes milestone starts
+
 Deployment target:
 
 - Gateway, Prometheus, and benchmark tooling run locally via Docker Compose.
@@ -44,6 +56,7 @@ Deployment target:
 
 Outputs:
 
+- minimal runnable FastAPI gateway skeleton before deeper endpoint work
 - runnable FastAPI gateway
 - real vLLM backend integration, using Phase 0 or Phase 1 model targets
 - Docker Compose deployment for gateway, Prometheus scraping, and benchmark

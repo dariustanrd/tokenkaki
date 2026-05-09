@@ -9,6 +9,12 @@ and experiment writeups. Each stage should produce runnable code, reproducible
 benchmark artifacts, saved results, and a technical interpretation of what the
 measurements mean.
 
+The codebase is planned as a Python-first, service-ready repository. The initial
+runtime service is the OpenAI-compatible gateway; benchmark runners, mock
+workers, replay tools, and other utilities remain separate tools or test
+fixtures until they have a concrete reason to become independently deployed
+services.
+
 ## Goals
 
 - Build a real OpenAI-compatible inference endpoint.
@@ -27,6 +33,42 @@ measurements mean.
   replay mode, and clear teardown paths.
 - Publish each stage through the `Behind the API` blog series with runnable
   artifacts, benchmark results, and technical interpretation.
+
+## Planned Repository Structure
+
+The first implementation should use `uv` with one installable Python package,
+deep modules, and service-ready deployment folders:
+
+```text
+pyproject.toml
+uv.lock
+
+src/tokenkaki/
+  gateway/
+  router/
+  backends/
+  registry/
+  observability/
+  auth/
+  config/
+
+benchmarks/
+deploy/
+  compose/
+
+experiments/
+scripts/
+tests/
+docs/
+blogposts/
+```
+
+`src/tokenkaki/` owns reusable platform code. `tokenkaki.gateway` is the only
+initial runtime service. `deploy/compose/` is the first deployment target.
+Kubernetes-family manifests, including kind, k3s, k3d, or cloud Kubernetes,
+should be added later under `deploy/kubernetes/` only when that milestone starts.
+Benchmark commands live under `benchmarks/`, while saved raw results, plots,
+commands, and interpretation live under milestone folders in `experiments/`.
 
 ## Documentation
 
