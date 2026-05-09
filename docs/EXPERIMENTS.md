@@ -94,6 +94,11 @@ What would this imply for deployment, scaling, reliability, or cost?
 - Keep raw benchmark outputs.
 - Record model, backend version, hardware, and deployment mode.
 - Record command lines used to run benchmarks.
+- For product-path measurements, run benchmarks against the public gateway
+  endpoint rather than directly against the backend engine.
+- Label backend-only benchmark runs separately from gateway-path benchmark runs.
+- Keep benchmark-observed latency, gateway-observed latency, backend-reported
+  usage, and GPU/system metrics separate in raw artifacts and reports.
 - Label synthetic or mock-worker results clearly.
 - Do not compare mock-worker results as if they were real model-serving results.
 - Include cost notes for rented GPU experiments.

@@ -31,6 +31,9 @@ phase, especially for multimodal, FP8, MoE, and disaggregated serving work.
 Learning objective: understand the request path from OpenAI-compatible API
 gateway to a real vLLM backend and measure baseline serving behavior.
 
+Detailed design:
+[`docs/milestones/001_vllm_gateway_baseline.md`](milestones/001_vllm_gateway_baseline.md).
+
 Repository foundation:
 
 - `uv` for Python package and dependency management
@@ -50,9 +53,15 @@ Deployment target:
   GPU/system correlation is being analyzed.
 - vLLM runs as a real GPU-backed service, either on the same GPU host or on a
   rented single-GPU node.
-- The gateway connects to vLLM over its OpenAI-compatible HTTP endpoint.
+- The gateway connects to an external vLLM server over its OpenAI-compatible
+  HTTP endpoint.
+- The gateway uses a small static config-backed registry for public model
+  aliases, backend URLs, and backend model names.
 - Kubernetes is intentionally deferred until the baseline endpoint, metrics, and
   benchmarks are working.
+- Auth and quotas are deferred until there is a concrete public-demo need.
+- Generation retries and failover are deferred until multiple-backend routing
+  work.
 
 Outputs:
 
@@ -62,7 +71,7 @@ Outputs:
 - Docker Compose deployment for gateway, Prometheus scraping, and benchmark
   support, with configurable remote/local vLLM backend URL
 - `/v1/models` and `/v1/chat/completions`
-- basic streaming support if feasible in the first pass
+- streaming and non-streaming chat completion support
 - Prometheus metrics for request count, errors, latency, selected backend, and
   token counts where available
 - reproducible benchmark command
