@@ -1,7 +1,7 @@
 models:
-  - name: qwen3-0.6b
+  - name: qwen3-8b
     enabled: true
     backend:
       type: vllm
       base_url: http://host.docker.internal:8001
-      model: Qwen/Qwen3-0.6B
+      model: Qwen/Qwen3-8B
