@@ -1,10 +1,17 @@
 import importlib
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
 from fastapi.testclient import TestClient
 
-from tokenkaki.backend import BackendConnectionFailure, BackendResponse, BackendTimeout
+from tokenkaki.backend import (
+    BackendConnectionFailure,
+    BackendResponse,
+    BackendStreamResponse,
+    BackendTimeout,
+)
 from tokenkaki.gateway import create_app
 from tokenkaki.registry import ModelRoute
 
@@ -77,20 +84,60 @@ def test_chat_completion_rejects_unknown_model() -> None:
     assert response.json()["error"]["type"] == "invalid_request_error"
 
 
-def test_chat_completion_rejects_streaming_until_slice_five() -> None:
+def test_chat_completion_streams_backend_sse(monkeypatch) -> None:
+    captured: dict[str, Any] = {}
+
+    async def chunks() -> AsyncIterator[bytes]:
+        yield b'data: {"choices":[{"delta":{"reasoning":"thinking"}}]}\n\n'
+        yield b'data: {"choices":[{"delta":{"content":"answer"}}]}\n\n'
+        yield b"data: [DONE]\n\n"
+
+    @asynccontextmanager
+    async def fake_open_chat_completion_stream(
+        route: ModelRoute,
+        body: dict[str, Any],
+        request_id: str,
+    ) -> AsyncIterator[BackendStreamResponse]:
+        captured["route"] = route
+        captured["body"] = body
+        captured["request_id"] = request_id
+        yield BackendStreamResponse(
+            status_code=200,
+            media_type="text/event-stream",
+            chunks=chunks(),
+        )
+
+    monkeypatch.setattr(gateway_app_module, "open_chat_completion_stream", fake_open_chat_completion_stream)
     client = TestClient(create_app())
 
-    response = client.post(
+    with client.stream(
+        "POST",
         "/v1/chat/completions",
+        headers={"x-request-id": "req-stream-123"},
         json={
             "model": "qwen3-0.6b",
             "stream": True,
             "messages": [{"role": "user", "content": "hi"}],
+            "chat_template_kwargs": {"enable_thinking": False},
         },
-    )
+    ) as response:
+        content = response.read()
 
-    assert response.status_code == 400
-    assert "not supported yet" in response.json()["error"]["message"]
+    assert response.status_code == 200
+    assert "text/event-stream" in response.headers["content-type"]
+    assert content == (
+        b'data: {"choices":[{"delta":{"reasoning":"thinking"}}]}\n\n'
+        b'data: {"choices":[{"delta":{"content":"answer"}}]}\n\n'
+        b"data: [DONE]\n\n"
+    )
+    assert captured["route"].backend_model == "Qwen/Qwen3-0.6B"
+    assert captured["body"] == {
+        "model": "qwen3-0.6b",
+        "stream": True,
+        "messages": [{"role": "user", "content": "hi"}],
+        "chat_template_kwargs": {"enable_thinking": False},
+    }
+    assert captured["request_id"] == "req-stream-123"
 
 
 def test_chat_completion_maps_backend_timeout(monkeypatch) -> None:

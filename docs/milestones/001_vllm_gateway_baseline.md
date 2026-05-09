@@ -55,6 +55,16 @@ responsibilities:
 - caller identity later, when auth exists
 - prompt-size or context-length estimate later, when routing needs it
 
+Generation controls are normally backend/model concerns. For Qwen3, thinking
+and non-thinking mode should be controlled through vLLM-supported request fields
+such as `chat_template_kwargs.enable_thinking` or through vLLM server defaults.
+The gateway should preserve those fields when forwarding the request. It should
+not silently strip `<think>` content, raise `max_tokens`, or synthesize a final
+answer if the backend stops before leaving the thinking block. If this becomes a
+common failure mode, the gateway may add explicit fail-loud validation or
+warning headers, such as warning when `enable_thinking: true` is paired with a
+low `max_tokens`.
+
 Milestone 1 endpoints:
 
 - `/v1/models`

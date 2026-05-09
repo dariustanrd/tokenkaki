@@ -55,6 +55,19 @@ The gateway should not become a model engine wrapper. It forwards
 OpenAI-compatible requests to real backend engines with minimal mutation and
 parses only the envelope needed for gateway responsibilities: endpoint, model,
 streaming mode, request context, routing inputs, and accounting data.
+Model-specific generation controls, such as Qwen3 thinking/non-thinking
+settings passed through vLLM `chat_template_kwargs`, are forwarded as part of
+the request body unless a documented gateway policy explicitly validates or
+rejects them. The gateway should not silently strip thinking content, increase
+token limits, or fabricate final answers when a reasoning model stops inside
+its thinking section.
+
+For reasoning-capable models, generation mode is serving policy rather than
+routing mechanics. Fast chat can disable thinking at the request or backend
+configuration level; reasoning workloads should use appropriate sampling
+settings and enough output tokens. Gateway observability should make truncated
+or expensive generations visible, while benchmark artifacts explain the mode
+used for each run.
 
 Component placement is a deployment concern rather than a code boundary.
 Milestone 1 development now runs directly on the NVIDIA GPU machine, with the

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any
 
@@ -23,6 +25,13 @@ class BackendResponse:
     status_code: int
     content: bytes
     media_type: str | None
+
+
+@dataclass(frozen=True)
+class BackendStreamResponse:
+    status_code: int
+    media_type: str | None
+    chunks: AsyncIterator[bytes]
 
 
 async def forward_chat_completion(
@@ -54,3 +63,43 @@ async def forward_chat_completion(
         content=response.content,
         media_type=response.headers.get("content-type"),
     )
+
+
+@asynccontextmanager
+async def open_chat_completion_stream(
+    route: ModelRoute,
+    body: dict[str, Any],
+    request_id: str,
+    timeout_seconds: float = 60.0,
+    transport: httpx.AsyncBaseTransport | None = None,
+) -> AsyncIterator[BackendStreamResponse]:
+    """Open a streaming OpenAI chat completion request to vLLM."""
+    forwarded_body = dict(body)
+    forwarded_body["model"] = route.backend_model
+    url = f"{route.backend_base_url.rstrip('/')}/v1/chat/completions"
+
+    client = httpx.AsyncClient(timeout=timeout_seconds, transport=transport)
+    try:
+        try:
+            stream_context = client.stream(
+                "POST",
+                url,
+                json=forwarded_body,
+                headers={"x-request-id": request_id},
+            )
+            response = await stream_context.__aenter__()
+        except httpx.TimeoutException as exc:
+            raise BackendTimeout() from exc
+        except httpx.RequestError as exc:
+            raise BackendConnectionFailure() from exc
+
+        try:
+            yield BackendStreamResponse(
+                status_code=response.status_code,
+                media_type=response.headers.get("content-type"),
+                chunks=response.aiter_bytes(),
+            )
+        finally:
+            await stream_context.__aexit__(None, None, None)
+    finally:
+        await client.aclose()

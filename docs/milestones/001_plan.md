@@ -52,16 +52,22 @@ by or embedded inside `tokenkaki.gateway`.
    - Why: validates the core request path through gateway to real backend.
    - Implication: failures are visible as gateway/backend evidence instead of hidden behind retries.
 
-5. **Streaming Chat Forwarding** - Pending
+5. **Streaming Chat Forwarding** - Completed
    - Add streaming SSE proxy support for `stream: true`.
    - Preserve vLLM chunks as OpenAI-compatible SSE.
+   - Preserve model-specific request controls such as Qwen3/vLLM `chat_template_kwargs` without translating them into gateway-private flags.
+   - Keep thinking and non-thinking behavior explicit in client/backend configuration: normal chat examples should use `chat_template_kwargs: {"enable_thinking": false}`, while reasoning-mode examples should use larger `max_tokens` and Qwen3-recommended sampling settings.
    - Record stream start, end, duration, selected backend, status, timeout class, error class, and detectable client disconnects.
    - Do not retry after response bytes are sent.
+   - Completed artifacts: streaming vLLM HTTP facade, gateway `stream: true` SSE proxy path, raw backend SSE chunk preservation, request ID forwarding, public alias to backend model rewrite for streaming requests, stream lifecycle logs, and focused gateway/backend streaming tests.
+   - Verified with: `uv run pytest tests/test_backend_vllm.py tests/test_gateway_chat.py tests/test_config_registry.py tests/test_gateway_models.py tests/test_gateway_skeleton.py`.
+   - Runtime validation still required on this GPU environment: start vLLM with `./deploy/vllm/run-openai-server.sh`, start the gateway with `uv run uvicorn tokenkaki.gateway:app --host 127.0.0.1 --port 8000`, then `curl -N` `POST /v1/chat/completions` through the gateway using `stream: true`.
    - Why: streaming is an early serving-path requirement, not a later enhancement.
-   - Implication: TTFT/TPOT remain benchmark-observed metrics; gateway metrics track stream lifecycle.
+   - Implication: TTFT/TPOT remain benchmark-observed metrics; gateway metrics track stream lifecycle. Truncated Qwen3 thinking outputs are backend/model behavior, so the gateway should not silently strip `<think>` content, raise `max_tokens`, or fabricate an answer.
 
 6. **Fail-Loud Error And Metrics Contract** - Pending
    - Return clear OpenAI-compatible error envelopes for unknown model, disabled model, backend HTTP error, timeout, connection failure, and unexpected gateway error.
+   - Add evidence-preserving handling for model-specific generation pitfalls where useful, starting with an optional Qwen3 warning or validation when `enable_thinking: true` is paired with a low `max_tokens`.
    - Log request ID, selected backend, status, timeout class, and error class.
    - Emit Prometheus metrics for request count, status, selected backend, routing policy, latency, stream duration, backend errors, and token counts when available.
    - Why: Milestone 1 should preserve evidence for learning.
@@ -100,6 +106,7 @@ so the code path stays comparable.
 - Public endpoints: `GET /healthz`, `GET /metrics`, `GET /v1/models`, `POST /v1/chat/completions`.
 - Static config fields: public model name, backend engine type `vllm`, backend base URL, optional backend model name, enabled state, and basic limits where useful.
 - Routing policy label: `static_single_backend`.
+- Generation controls are forwarded to the backend unless a documented gateway policy says otherwise. Qwen3 thinking/non-thinking mode is controlled through vLLM request/body fields such as `chat_template_kwargs.enable_thinking`, not a gateway-specific API.
 - vLLM setup artifacts may live under `deploy/vllm/`, but vLLM is not imported, embedded, or managed inside `tokenkaki.gateway`.
 - No top-level `services/`, no Kubernetes manifests, no Rust, no SGLang, no mock worker in the serving path.
 
@@ -118,6 +125,7 @@ so the code path stays comparable.
 
 ## Assumptions
 - Default dev model alias is `qwen3-0.6b`, mapped to `Qwen/Qwen3-0.6B`.
+- Qwen3 thinking mode is enabled by default in the model/template path. Low `max_tokens` can end generation inside `<think>...</think>` and produce no final answer; this should be documented or warned about, not silently repaired by the gateway.
 - vLLM is external and OpenAI-compatible over HTTP for Milestone 1.
 - The primary dev environment is this NVIDIA GPU machine.
 - The same repo clone owns gateway development, vLLM setup artifacts, benchmark commands, and saved experiment artifacts for Milestone 1.

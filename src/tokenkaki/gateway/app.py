@@ -2,17 +2,27 @@
 
 from __future__ import annotations
 
+import asyncio
+from contextlib import AsyncExitStack
 import logging
 import os
 import time
+from typing import Any
 from uuid import uuid4
 
+import httpx
 from fastapi import FastAPI, Request, Response
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from starlette.responses import StreamingResponse
 
-from tokenkaki.backend import BackendConnectionFailure, BackendTimeout, forward_chat_completion
+from tokenkaki.backend import (
+    BackendConnectionFailure,
+    BackendTimeout,
+    forward_chat_completion,
+    open_chat_completion_stream,
+)
 from tokenkaki.config import load_config
-from tokenkaki.registry import list_public_models, resolve_model
+from tokenkaki.registry import ModelRoute, list_public_models, resolve_model
 
 LOGGER = logging.getLogger("tokenkaki.gateway")
 
@@ -84,16 +94,12 @@ def create_app(config_path: str | None = None) -> FastAPI:
         if not isinstance(model, str) or not model:
             return _error_response("invalid_request_error", "request body must include a model", 400)
 
-        if body.get("stream") is True:
-            return _error_response(
-                "invalid_request_error",
-                "streaming chat completions are not supported yet",
-                400,
-            )
-
         route = resolve_model(app.state.config, model)
         if route is None:
             return _error_response("invalid_request_error", f"unknown or disabled model: {model}", 404)
+
+        if body.get("stream") is True:
+            return await _stream_chat_completion(request, route, body)
 
         try:
             backend_response = await forward_chat_completion(
@@ -133,6 +139,113 @@ def create_app(config_path: str | None = None) -> FastAPI:
 
 
 app = create_app()
+
+
+async def _stream_chat_completion(request: Request, route: ModelRoute, body: dict[str, Any]) -> Response:
+    stream_started_at = time.perf_counter()
+    exit_stack = AsyncExitStack()
+
+    try:
+        backend_stream = await exit_stack.enter_async_context(
+            open_chat_completion_stream(
+                route,
+                body,
+                request_id=request.state.request_id,
+            )
+        )
+    except BackendTimeout:
+        LOGGER.warning(
+            "backend_stream_timeout_before_headers",
+            extra={
+                "request_id": request.state.request_id,
+                "selected_backend": route.backend_base_url,
+                "status": 504,
+                "error_class": "backend_timeout",
+                "timeout_class": "backend_stream_open_timeout",
+            },
+        )
+        await exit_stack.aclose()
+        return _error_response("server_error", "backend stream timed out", 504)
+    except BackendConnectionFailure:
+        LOGGER.warning(
+            "backend_stream_connection_failed_before_headers",
+            extra={
+                "request_id": request.state.request_id,
+                "selected_backend": route.backend_base_url,
+                "status": 502,
+                "error_class": "backend_connection_failure",
+            },
+        )
+        await exit_stack.aclose()
+        return _error_response("server_error", "backend stream connection failed", 502)
+
+    LOGGER.info(
+        "backend_stream_started",
+        extra={
+            "request_id": request.state.request_id,
+            "selected_backend": route.backend_base_url,
+            "status": backend_stream.status_code,
+            "routing_policy": route.routing_policy,
+        },
+    )
+
+    async def stream_body():
+        status = "completed"
+        error_class = None
+        try:
+            async for chunk in backend_stream.chunks:
+                yield chunk
+        except asyncio.CancelledError:
+            status = "client_disconnected"
+            error_class = "client_disconnect"
+            raise
+        except httpx.TimeoutException:
+            status = "backend_timeout"
+            error_class = "backend_timeout"
+            LOGGER.warning(
+                "backend_stream_timeout_after_headers",
+                extra={
+                    "request_id": request.state.request_id,
+                    "selected_backend": route.backend_base_url,
+                    "status": backend_stream.status_code,
+                    "error_class": error_class,
+                    "timeout_class": "backend_stream_read_timeout",
+                },
+            )
+            raise
+        except httpx.RequestError:
+            status = "backend_connection_failure"
+            error_class = "backend_connection_failure"
+            LOGGER.warning(
+                "backend_stream_connection_failed_after_headers",
+                extra={
+                    "request_id": request.state.request_id,
+                    "selected_backend": route.backend_base_url,
+                    "status": backend_stream.status_code,
+                    "error_class": error_class,
+                },
+            )
+            raise
+        finally:
+            duration = time.perf_counter() - stream_started_at
+            LOGGER.info(
+                "backend_stream_finished",
+                extra={
+                    "request_id": request.state.request_id,
+                    "selected_backend": route.backend_base_url,
+                    "status": backend_stream.status_code,
+                    "stream_status": status,
+                    "error_class": error_class,
+                    "duration_seconds": duration,
+                },
+            )
+            await exit_stack.aclose()
+
+    return StreamingResponse(
+        stream_body(),
+        status_code=backend_stream.status_code,
+        media_type=backend_stream.media_type or "text/event-stream",
+    )
 
 
 def _error_response(error_type: str, message: str, status_code: int) -> Response:
