@@ -32,12 +32,11 @@ client, demo UI, or benchmark runner
 The gateway is the only `tokenkaki` runtime service. vLLM is a separately
 managed serving engine reachable over HTTP.
 
-Component placement may change without changing this boundary. Early
-development may run the gateway on macOS and vLLM on a remote NVIDIA GPU host
-over Tailscale. Later Milestone 1 validation should also support running the
-gateway, vLLM, metrics stack, and benchmark tooling on the same remote GPU
-machine, and future milestones may move the same roles onto rented GPU VMs or
-clusters. These are deployment placements, not different application
+Component placement may change without changing this boundary. Milestone 1 now
+defaults to direct development on the NVIDIA GPU machine, with the gateway,
+vLLM, metrics stack, benchmark tooling, and experiment artifacts managed from
+the same working repo clone. Future milestones may move the same roles onto rented GPU
+VMs or clusters. These are deployment placements, not different application
 architectures.
 
 ## Request Handling
@@ -134,10 +133,8 @@ related signals, but none of them is the single source of truth for the whole
 serving path.
 
 Every saved experiment should record where the benchmark runner, gateway, vLLM
-backend, and metrics stack ran, plus the network path between them. A
-Mac-to-remote-vLLM run over Tailscale is useful gateway-path evidence, but it is
-not the same measurement as a same-host gateway-to-vLLM run or a backend-only
-vLLM benchmark.
+backend, and metrics stack ran, plus the network path between them. Same-host
+gateway-to-vLLM runs are the default Milestone 1 baseline.
 
 ## Failure Policy
 
@@ -158,10 +155,10 @@ means errors are visible in metrics, logs, and saved benchmark artifacts.
 
 - runnable FastAPI gateway
 - external vLLM backend config
-- remote GPU vLLM setup/run artifacts under `deploy/vllm/`
+- local GPU vLLM setup/run artifacts under `deploy/vllm/`
 - Docker Compose deployment for gateway, Prometheus scraping, and benchmark
   support
-- configurable local or remote vLLM backend URL
+- configurable vLLM backend URL
 - streaming and non-streaming `/v1/chat/completions`
 - `/v1/models` returning gateway public model aliases
 - Prometheus metrics for gateway-observed request behavior

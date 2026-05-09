@@ -56,13 +56,11 @@ OpenAI-compatible requests to real backend engines with minimal mutation and
 parses only the envelope needed for gateway responsibilities: endpoint, model,
 streaming mode, request context, routing inputs, and accounting data.
 
-Component placement is a deployment concern rather than a code boundary. During
-early development the gateway may run on macOS while vLLM runs on a remote GPU
-machine over Tailscale. The same code path should also support running the
-gateway, vLLM, metrics stack, and benchmarks on the GPU host, on a rented
-single-node GPU VM, or later across a cluster. Configured backend addresses and
-deployment artifacts should change across those modes; gateway architecture
-should not.
+Component placement is a deployment concern rather than a code boundary.
+Milestone 1 development now runs directly on the NVIDIA GPU machine, with the
+gateway, vLLM, metrics stack, benchmarks, and experiment artifacts on the same
+host by default. Configured backend addresses and deployment artifacts should 
+change across those modes; gateway architecture should not.
 
 Telemetry is emitted alongside the serving path rather than after it:
 

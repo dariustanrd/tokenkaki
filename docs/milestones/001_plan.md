@@ -5,7 +5,11 @@ Implement Milestone 1 as vertical tracer-bullet slices, not horizontal layer wor
 
 This aligns with `AGENTS.md` by keeping `tokenkaki.gateway` as the only runtime service, using `uv`, placing code under `src/tokenkaki/`, using real external vLLM over HTTP, preserving metric provenance, and saving benchmark artifacts under `experiments/001_vllm_gateway_baseline/`.
 
-The repo should also be cloneable on the remote NVIDIA GPU machine. That clone owns setup/run artifacts for the external vLLM backend, while the local macOS clone owns gateway development. vLLM remains a separately managed backend process, not code imported by or embedded inside `tokenkaki.gateway`.
+Milestone 1 development now happens directly on the NVIDIA GPU machine. This
+single working clone owns gateway development, setup/run artifacts for the
+external vLLM backend, local smoke tests, benchmark clients, and experiment
+artifacts. vLLM remains a separately managed backend process, not code imported
+by or embedded inside `tokenkaki.gateway`.
 
 ## Tracer-Bullet Slices
 1. **Runnable Gateway Skeleton** - Completed
@@ -26,13 +30,13 @@ The repo should also be cloneable on the remote NVIDIA GPU machine. That clone o
    - Why: establishes the bootstrap registry without pretending config is long-term runtime state.
    - Implication: health/load/backend model lists stay runtime signals for later milestones.
 
-3. **Remote vLLM Dev-Lab Setup** - Pending
-   - Add `deploy/vllm/` setup docs and scripts for running external vLLM on a Linux NVIDIA GPU machine cloned from the same repo.
-   - Include environment examples for the default dev model `Qwen/Qwen3-0.6B`, bind host, port, and any model/cache paths needed by the remote machine.
-   - Document Tailscale access from the macOS gateway dev environment to the remote vLLM OpenAI-compatible endpoint.
-   - Add smoke-test commands for direct remote vLLM `/v1/models` and `/v1/chat/completions` calls before routing traffic through the gateway.
+3. **Local GPU vLLM Dev-Lab Setup** - Pending
+   - Add `deploy/vllm/` setup docs and scripts for running external vLLM on this Linux NVIDIA GPU machine from the working repo clone.
+   - Include environment examples for the default dev model `Qwen/Qwen3-0.6B`, bind host, port, and any model/cache paths needed by the GPU machine.
+   - Prefer loopback or private-host binding for Milestone 1 development, with any remote client access documented as optional and explicitly separate from baseline measurement.
+   - Add smoke-test commands for direct local vLLM `/v1/models` and `/v1/chat/completions` calls before routing traffic through the gateway.
    - Why: makes the real backend reproducible without turning vLLM into a `tokenkaki` runtime service.
-   - Implication: the same repo can be used on both machines, but gateway code still treats vLLM as an external HTTP dependency.
+   - Implication: the default dev path removes private-network gateway/backend noise while gateway code still treats vLLM as an external HTTP dependency.
 
 4. **Non-Streaming Chat Forwarding** - Pending
    - Implement `POST /v1/chat/completions` for non-streaming requests.
@@ -58,34 +62,32 @@ The repo should also be cloneable on the remote NVIDIA GPU machine. That clone o
    - Implication: no auth, quotas, smart retries, or failover are added yet.
 
 7. **Compose, Benchmark, And Experiment Artifact Path** - Pending
-   - Add `deploy/compose/` for gateway and Prometheus scraping only; vLLM remains a separately managed local or remote GPU-backed server.
+   - Add `deploy/compose/` for gateway and Prometheus scraping only; vLLM remains a separately managed GPU-backed server on this machine for Milestone 1.
    - Add benchmark commands under `benchmarks/` using vLLM benchmark tooling against the gateway OpenAI chat endpoint.
    - Add `experiments/001_vllm_gateway_baseline/` with `README.md`, `commands.md`, `configs/`, `raw/`, `plots/`, and `report.md`.
    - Why: every stage must produce runnable/deployable code, a reproducible benchmark command, saved artifacts, and interpretation.
    - Implication: benchmark-observed latency, gateway-observed latency, backend usage, and GPU metrics are kept separate.
 
-## Local And Remote Development Topology
-- Local macOS machine: runs gateway development, unit tests, local smoke tests, docs, and benchmark clients when measuring Mac-to-remote behavior.
-- Remote NVIDIA GPU machine: runs vLLM as an external OpenAI-compatible HTTP server from the same cloned repo's `deploy/vllm/` artifacts.
-- Network path: macOS gateway reaches vLLM over Tailscale using a private Tailnet hostname or IP.
-- Security posture: keep vLLM private to Tailscale or an equivalent private network for Milestone 1; public exposure, auth, quotas, and rate limits are later milestone work.
+## Direct GPU Development Topology
+- NVIDIA GPU machine: runs gateway development, unit tests, local smoke tests, docs, benchmark clients, vLLM, and the Milestone 1 metrics stack from this working repo clone.
+- Default network path: benchmark/client -> `tokenkaki.gateway` -> external vLLM over loopback or a private host interface on the same machine.
+- Optional remote client path: another machine may call the gateway or vLLM over Tailscale or an equivalent private network for convenience, but that path must be labeled separately from same-host baseline results.
+- Security posture: keep vLLM private to loopback, the host network, Tailscale, or an equivalent private network for Milestone 1; public exposure, auth, quotas, and rate limits are later milestone work.
 - Provenance rule: record where the benchmark runner, gateway, and vLLM backend were running for every saved experiment.
 
 Machine placement is deployment configuration, not application architecture. The
-same logical serving path should work as components move from local development
-to a remote GPU host and later to rented GPU or cluster environments.
+same logical serving path should work as components move from direct development
+on this GPU host to rented GPU or cluster environments.
 
 | Placement mode | Gateway | vLLM backend | Benchmark runner | Purpose |
 | --- | --- | --- | --- | --- |
-| Local gateway, remote backend | macOS dev machine | Remote NVIDIA GPU machine over Tailscale | macOS dev machine | Fast gateway iteration against a real GPU backend. |
-| Single-node remote | Remote NVIDIA GPU machine | Same remote NVIDIA GPU machine | Remote machine or macOS | Remove gateway-to-backend Tailnet latency and validate one-box deployment. |
+| Direct GPU dev baseline | NVIDIA GPU machine | Same NVIDIA GPU machine | Same NVIDIA GPU machine | Default Milestone 1 path for code, smoke tests, and baseline measurements without gateway/backend network noise. |
 | Cloud single-node | Rented GPU VM | Same rented GPU VM or private peer VM | Local or cloud runner | Reproduce the baseline on rented infrastructure with explicit cost notes. |
 | Cluster milestone | Kubernetes or cluster control plane | GPU node pool | Dedicated benchmark runner | Study orchestration, multi-node serving, and distributed observability later. |
 
-Implication: early Mac-to-remote measurements are useful gateway-path evidence,
-but they should not be described as raw backend performance. Later same-node and
-cloud runs should use the same config fields with different backend URLs so the
-code path stays comparable.
+Implication: same-host measurements are now the default Milestone 1 baseline.
+Cloud runs should use the same config fields with different backend URLs 
+so the code path stays comparable.
 
 ## Public Interfaces And Boundaries
 - Runtime service: only `tokenkaki.gateway`.
@@ -101,18 +103,18 @@ code path stays comparable.
 - Acceptance checks:
   - `uv run pytest`
   - local gateway startup with `uv run uvicorn`
-  - remote vLLM startup from `deploy/vllm/` docs or scripts on the NVIDIA GPU machine
-  - Mac can reach remote vLLM over Tailscale with direct `/v1/models` and non-streaming `/v1/chat/completions` smoke tests
-  - gateway can be run on the remote machine with a loopback vLLM backend URL for single-node validation
-  - Compose starts gateway and Prometheus with configurable remote vLLM URL
+  - local vLLM startup from `deploy/vllm/` docs or scripts on the NVIDIA GPU machine
+  - direct local vLLM `/v1/models` and non-streaming `/v1/chat/completions` smoke tests pass before gateway routing
+  - gateway runs on the same GPU machine with a loopback vLLM backend URL for single-node validation
+  - Compose starts gateway and Prometheus with configurable vLLM URL
   - `curl` verifies health, models, non-streaming chat, and streaming chat against real vLLM
   - documented vLLM benchmark command runs against the gateway and saves raw output under the milestone experiment folder
 
 ## Assumptions
 - Default dev model alias is `qwen3-0.6b`, mapped to `Qwen/Qwen3-0.6B`.
 - vLLM is external and OpenAI-compatible over HTTP for Milestone 1.
-- The primary dev backend may run on a remote NVIDIA GPU machine reachable from macOS over Tailscale.
-- The same repo may be cloned on both machines; role-specific artifacts must stay clearly separated.
+- The primary dev environment is this NVIDIA GPU machine.
+- The same repo clone owns gateway development, vLLM setup artifacts, benchmark commands, and saved experiment artifacts for Milestone 1.
 - vLLM benchmark tooling is the first reproducible benchmark path; GenAI-Perf can be added later for richer OpenAI-compatible endpoint behavior.
 - Mocked HTTP backends may be used only in tests, clearly separate from real serving code.
 - Public docs and experiment writeups must avoid presenting synthetic or mocked results as real model-serving results.
