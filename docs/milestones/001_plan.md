@@ -37,7 +37,7 @@ by or embedded inside `tokenkaki.gateway`.
    - Add smoke-test commands for direct local vLLM `/v1/models` and `/v1/chat/completions` calls before routing traffic through the gateway.
    - Completed artifacts: `deploy/vllm/README.md`, `deploy/vllm/env.example`, `deploy/vllm/pyproject.toml`, `deploy/vllm/uv.lock`, `deploy/vllm/run-openai-server.sh`, and `deploy/vllm/smoke-openai.sh`.
    - Verified with: `UV_TORCH_BACKEND=cu118 uv lock` in `deploy/vllm/`, `bash -n deploy/vllm/run-openai-server.sh`, `bash -n deploy/vllm/smoke-openai.sh`, executable-bit checks for both scripts, and `CUDA_VISIBLE_DEVICES=4` PyTorch visibility showing one logical A100.
-   - Runtime validation still required on this GPU environment: run `UV_TORCH_BACKEND=cu118 uv sync --frozen` in `deploy/vllm/`, start `./deploy/vllm/run-openai-server.sh`, then run `./deploy/vllm/smoke-openai.sh`.
+   - Runtime validated on this GPU environment with external vLLM reachable on the Docker-reachable host address used by the Compose gateway.
    - Why: makes the real backend reproducible without turning vLLM into a `tokenkaki` runtime service.
    - Implication: the default dev path removes private-network gateway/backend noise while gateway code still treats vLLM as an external HTTP dependency.
 
@@ -48,7 +48,7 @@ by or embedded inside `tokenkaki.gateway`.
    - Add vLLM HTTP backend client; do not import or embed vLLM internals.
    - Completed artifacts: `tokenkaki.backend` vLLM HTTP facade, non-streaming gateway chat route, public alias to backend model rewrite, request ID forwarding, explicit unknown-model/streaming-not-yet-supported/backend-timeout/backend-connection failure responses, and focused gateway/backend tests.
    - Verified with: `uv run pytest tests/test_backend_vllm.py tests/test_gateway_chat.py tests/test_config_registry.py tests/test_gateway_models.py tests/test_gateway_skeleton.py`.
-   - Runtime validation still required on this GPU environment: start vLLM with `./deploy/vllm/run-openai-server.sh`, start the gateway with `uv run uvicorn tokenkaki.gateway:app --host 127.0.0.1 --port 8000`, then `curl` `POST /v1/chat/completions` through the gateway using public model alias `qwen3-0.6b`.
+   - Runtime validated on this GPU environment with a non-streaming `POST /v1/chat/completions` through the gateway using public model alias `qwen3-0.6b`.
    - Why: validates the core request path through gateway to real backend.
    - Implication: failures are visible as gateway/backend evidence instead of hidden behind retries.
 
@@ -61,7 +61,7 @@ by or embedded inside `tokenkaki.gateway`.
    - Do not retry after response bytes are sent.
    - Completed artifacts: streaming vLLM HTTP facade, gateway `stream: true` SSE proxy path, raw backend SSE chunk preservation, request ID forwarding, public alias to backend model rewrite for streaming requests, stream lifecycle logs, and focused gateway/backend streaming tests.
    - Verified with: `uv run pytest tests/test_backend_vllm.py tests/test_gateway_chat.py tests/test_config_registry.py tests/test_gateway_models.py tests/test_gateway_skeleton.py`.
-   - Runtime validation still required on this GPU environment: start vLLM with `./deploy/vllm/run-openai-server.sh`, start the gateway with `uv run uvicorn tokenkaki.gateway:app --host 127.0.0.1 --port 8000`, then `curl -N` `POST /v1/chat/completions` through the gateway using `stream: true`.
+   - Runtime validated on this GPU environment with `curl -N` `POST /v1/chat/completions` through the gateway using `stream: true`.
    - Why: streaming is an early serving-path requirement, not a later enhancement.
    - Implication: TTFT/TPOT remain benchmark-observed metrics; gateway metrics track stream lifecycle. Truncated Qwen3 thinking outputs are backend/model behavior, so the gateway should not silently strip `<think>` content, raise `max_tokens`, or fabricate an answer.
 
@@ -103,6 +103,7 @@ by or embedded inside `tokenkaki.gateway`.
      - `curl http://127.0.0.1:18000/v1/models`.
      - `curl http://127.0.0.1:18000/metrics`.
      - `curl 'http://127.0.0.1:19090/api/v1/targets?state=active'` showing Prometheus target health `up`.
+     - Final acceptance checks: `uv run pytest`, direct external vLLM `/v1/models`, Compose gateway non-streaming chat, Compose gateway streaming chat, and Prometheus target health.
      - A Compose chat request while vLLM was bound to host loopback produced the expected gateway `502` and backend connection failure metrics, confirming the failure is visible.
      - Restarted external vLLM with `VLLM_HOST=172.17.0.1 ./deploy/vllm/run-openai-server.sh`, then verified a successful non-streaming `/v1/chat/completions` request through the Compose gateway on `http://127.0.0.1:18000`.
      - Verified benchmark command shape with a one-request smoke run: `GATEWAY_BASE_URL=http://127.0.0.1:18000 NUM_PROMPTS=1 REQUEST_RATE=1 RANDOM_INPUT_LEN=16 RANDOM_OUTPUT_LEN=8 RESULT_FILENAME=vllm-gateway-serving-smoke.json ./benchmarks/vllm-gateway-serving.sh`.
