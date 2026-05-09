@@ -81,10 +81,18 @@ by or embedded inside `tokenkaki.gateway`.
    - Why: Milestone 1 should preserve evidence for learning, and metrics are the least invasive first step.
    - Implication: no auth, quotas, smart retries, failover, or broader error-policy changes are added yet.
 
-7. **Compose, Benchmark, And Experiment Artifact Path** - Pending
-   - Add `deploy/compose/` for gateway and Prometheus scraping only; vLLM remains a separately managed GPU-backed server on this machine for Milestone 1.
-   - Add benchmark commands under `benchmarks/` using vLLM benchmark tooling against the gateway OpenAI chat endpoint.
-   - Add `experiments/001_vllm_gateway_baseline/` with `README.md`, `commands.md`, `configs/`, `raw/`, `plots/`, and `report.md`.
+7. **Compose, Benchmark, And Experiment Artifact Path** - In Progress
+   - Completed Compose increment:
+     - Added `deploy/compose/` for gateway and Prometheus scraping only.
+     - vLLM remains a separately managed external GPU-backed server for Milestone 1.
+     - Added Compose-specific gateway config pointing from the gateway container to host vLLM through `http://host.docker.internal:8001`.
+     - Added Prometheus scrape config for gateway `/metrics`.
+     - Added Compose run and verification docs.
+   - Verified with: `docker compose -f deploy/compose/compose.yaml config`.
+   - Pending:
+     - Run the Compose stack against the local external vLLM process and verify `/healthz`, `/v1/models`, `/v1/chat/completions`, `/metrics`, and Prometheus target health.
+     - Add benchmark commands under `benchmarks/` using vLLM benchmark tooling against the gateway OpenAI chat endpoint.
+     - Add `experiments/001_vllm_gateway_baseline/` with `README.md`, `commands.md`, `configs/`, `raw/`, `plots/`, and `report.md`.
    - Why: every stage must produce runnable/deployable code, a reproducible benchmark command, saved artifacts, and interpretation.
    - Implication: benchmark-observed latency, gateway-observed latency, backend usage, and GPU metrics are kept separate.
 
