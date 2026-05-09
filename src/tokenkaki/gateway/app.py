@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 from uuid import uuid4
 
 from fastapi import FastAPI, Request, Response
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+
+from tokenkaki.config import load_config
+from tokenkaki.registry import list_public_models
 
 LOGGER = logging.getLogger("tokenkaki.gateway")
 
@@ -23,9 +27,10 @@ REQUEST_LATENCY_SECONDS = Histogram(
 )
 
 
-def create_app() -> FastAPI:
+def create_app(config_path: str | None = None) -> FastAPI:
     """Create the Milestone 1 gateway application."""
     app = FastAPI(title="tokenkaki gateway", version="0.1.0")
+    app.state.config = load_config(config_path or os.getenv("TOKENKAKI_CONFIG"))
 
     @app.middleware("http")
     async def observe_requests(request: Request, call_next) -> Response:
@@ -63,6 +68,10 @@ def create_app() -> FastAPI:
     @app.get("/metrics")
     async def metrics() -> Response:
         return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+    @app.get("/v1/models")
+    async def models() -> dict[str, object]:
+        return {"object": "list", "data": list_public_models(app.state.config)}
 
     return app
 

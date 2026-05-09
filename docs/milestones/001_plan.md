@@ -17,10 +17,12 @@ The repo should also be cloneable on the remote NVIDIA GPU machine. That clone o
    - Why: proves the runtime service, packaging, and observability base work early.
    - Implication: later slices extend the same service instead of introducing new top-level services.
 
-2. **Static Registry To `/v1/models`** - Pending
+2. **Static Registry To `/v1/models`** - Completed
    - Add static YAML config for public model alias `qwen3-0.6b`, backend type `vllm`, backend URL, backend model `Qwen/Qwen3-0.6B`, and enabled state.
    - Implement config and registry functional facades.
    - Expose `/v1/models` from enabled public aliases only.
+   - Completed artifacts: packaged default gateway YAML config, config loader facade, static registry facade, model route resolution, and `/v1/models` endpoint.
+   - Verified with: `uv run pytest`, `uv run uvicorn tokenkaki.gateway:app --host 127.0.0.1 --port 8000`, `curl /v1/models`, and `curl /metrics`.
    - Why: establishes the bootstrap registry without pretending config is long-term runtime state.
    - Implication: health/load/backend model lists stay runtime signals for later milestones.
 

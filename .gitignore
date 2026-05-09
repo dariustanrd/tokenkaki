@@ -1,1 +1,40 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+
+# Logs and runtime scratch files
+*.log
+*.pid
+.DS_Store
+
+# Editor and IDE state
+.vscode/
+.idea/
+
+# Benchmark and experiment scratch output
+benchmarks/.tmp/
+experiments/.tmp/
+
+# Local agent/project guidance
 AGENTS.md

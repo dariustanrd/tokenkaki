@@ -380,6 +380,7 @@ source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "prometheus-client" },
+    { name = "pyyaml" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -393,6 +394,7 @@ dev = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115.0" },
     { name = "prometheus-client", specifier = ">=0.21.0" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32.0" },
 ]
 
