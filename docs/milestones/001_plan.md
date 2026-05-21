@@ -3,13 +3,16 @@
 ## Summary
 Implement Milestone 1 as vertical tracer-bullet slices, not horizontal layer work. Each slice must produce a narrow end-to-end path through config, gateway, backend integration, observability, deployment/docs, and tests so progress is demoable at every step.
 
-This aligns with `AGENTS.md` by keeping `tokenkaki.gateway` as the only runtime service, using `uv`, placing code under `src/tokenkaki/`, using real external vLLM over HTTP, preserving metric provenance, and saving benchmark artifacts under `experiments/001_vllm_gateway_baseline/`.
+Canonical Milestone 1 serving boundaries, topology, request handling,
+observability, failure policy, assumptions, and expected artifacts are defined
+in `001_vllm_gateway_baseline.md`. This plan intentionally tracks execution
+status, completed artifacts, verification history, and acceptance checks instead
+of restating the design contract.
 
-Milestone 1 development now happens directly on the NVIDIA GPU machine. This
-single working clone owns gateway development, setup/run artifacts for the
-external vLLM backend, local smoke tests, benchmark clients, and experiment
-artifacts. vLLM remains a separately managed backend process, not code imported
-by or embedded inside `tokenkaki.gateway`.
+Current packaged gateway config uses public alias `qwen3-8b` backed by
+`Qwen/Qwen3-8B`. Earlier slice notes and saved experiment artifacts that mention
+`qwen3-0.6b` are historical provenance for the first validated run, not the
+current default.
 
 ## Tracer-Bullet Slices
 1. **Runnable Gateway Skeleton** - Completed
@@ -113,35 +116,18 @@ by or embedded inside `tokenkaki.gateway`.
    - Why: every stage must produce runnable/deployable code, a reproducible benchmark command, saved artifacts, and interpretation.
    - Implication: benchmark-observed latency, gateway-observed latency, backend usage, and GPU metrics are kept separate.
 
-## Direct GPU Development Topology
-- NVIDIA GPU machine: runs gateway development, unit tests, local smoke tests, docs, benchmark clients, vLLM, and the Milestone 1 metrics stack from this working repo clone.
-- Default network path: benchmark/client -> `tokenkaki.gateway` -> external vLLM over loopback or a private host interface on the same machine.
-- Optional remote client path: another machine may call the gateway or vLLM over Tailscale or an equivalent private network for convenience, but that path must be labeled separately from same-host baseline results.
-- Security posture: keep vLLM private to loopback, the host network, Tailscale, or an equivalent private network for Milestone 1; public exposure, auth, quotas, and rate limits are later milestone work.
-- Provenance rule: record where the benchmark runner, gateway, and vLLM backend were running for every saved experiment.
+## Canonical Design Contract
+Use `001_vllm_gateway_baseline.md` as the canonical source for:
 
-Machine placement is deployment configuration, not application architecture. The
-same logical serving path should work as components move from direct development
-on this GPU host to rented GPU or cluster environments.
+- serving boundary and topology
+- public interfaces and request-handling rules
+- model/backend config shape
+- streaming, observability, and failure policy
+- milestone assumptions and expected artifacts
 
-| Placement mode | Gateway | vLLM backend | Benchmark runner | Purpose |
-| --- | --- | --- | --- | --- |
-| Direct GPU dev baseline | NVIDIA GPU machine | Same NVIDIA GPU machine | Same NVIDIA GPU machine | Default Milestone 1 path for code, smoke tests, and baseline measurements without gateway/backend network noise. |
-| Cloud single-node | Rented GPU VM | Same rented GPU VM or private peer VM | Local or cloud runner | Reproduce the baseline on rented infrastructure with explicit cost notes. |
-| Cluster milestone | Kubernetes or cluster control plane | GPU node pool | Dedicated benchmark runner | Study orchestration, multi-node serving, and distributed observability later. |
-
-Implication: same-host measurements are now the default Milestone 1 baseline.
-Cloud runs should use the same config fields with different backend URLs 
-so the code path stays comparable.
-
-## Public Interfaces And Boundaries
-- Runtime service: only `tokenkaki.gateway`.
-- Public endpoints: `GET /healthz`, `GET /metrics`, `GET /v1/models`, `POST /v1/chat/completions`.
-- Static config fields: public model name, backend engine type `vllm`, backend base URL, optional backend model name, enabled state, and basic limits where useful.
-- Routing policy label: `static_single_backend`.
-- Generation controls are forwarded to the backend unless a documented gateway policy says otherwise. Qwen3 thinking/non-thinking mode is controlled through vLLM request/body fields such as `chat_template_kwargs.enable_thinking`, not a gateway-specific API.
-- vLLM setup artifacts may live under `deploy/vllm/`, but vLLM is not imported, embedded, or managed inside `tokenkaki.gateway`.
-- No top-level `services/`, no Kubernetes manifests, no Rust, no SGLang, no mock worker in the serving path.
+Keep this plan focused on tracer-bullet execution status and verification
+history. When the contract changes, update `001_vllm_gateway_baseline.md` first
+and reference that change from the relevant slice here.
 
 ## Test Plan
 - Unit tests for config loading, registry alias resolution, router selection, and error envelope shape.
@@ -155,13 +141,3 @@ so the code path stays comparable.
   - Compose starts gateway and Prometheus with configurable vLLM URL
   - `curl` verifies health, models, non-streaming chat, and streaming chat against real vLLM
   - documented vLLM benchmark command runs against the gateway and saves raw output under the milestone experiment folder
-
-## Assumptions
-- Default dev model alias is `qwen3-0.6b`, mapped to `Qwen/Qwen3-0.6B`.
-- Qwen3 thinking mode is enabled by default in the model/template path. Low `max_tokens` can end generation inside `<think>...</think>` and produce no final answer; this should be documented or warned about, not silently repaired by the gateway.
-- vLLM is external and OpenAI-compatible over HTTP for Milestone 1.
-- The primary dev environment is this NVIDIA GPU machine.
-- The same repo clone owns gateway development, vLLM setup artifacts, benchmark commands, and saved experiment artifacts for Milestone 1.
-- vLLM benchmark tooling is the first reproducible benchmark path; GenAI-Perf can be added later for richer OpenAI-compatible endpoint behavior.
-- Mocked HTTP backends may be used only in tests, clearly separate from real serving code.
-- Public docs and experiment writeups must avoid presenting synthetic or mocked results as real model-serving results.

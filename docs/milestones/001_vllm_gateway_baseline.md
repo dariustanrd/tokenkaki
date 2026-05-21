@@ -9,6 +9,11 @@ Milestone 1 should answer one concrete question: what happens when a client or
 benchmark sends OpenAI-compatible chat requests through `tokenkaki.gateway` to a
 real vLLM backend?
 
+This document is the canonical Milestone 1 design contract for serving
+boundaries, topology, request handling, observability, failure policy, and
+expected artifacts. The companion `001_plan.md` tracks tracer-bullet execution
+status and should link here instead of duplicating contract prose.
+
 ## Non-Goals
 
 - Do not import, embed, or modify vLLM internals.
@@ -17,6 +22,8 @@ real vLLM backend?
 - Do not turn the gateway into a benchmark-results service.
 - Do not introduce Kubernetes before the gateway, metrics, and baseline
   benchmark path are working.
+- Do not add top-level `services/`, Rust, SGLang, or mock workers to the
+  Milestone 1 serving path.
 
 ## Serving Boundary
 
@@ -35,9 +42,15 @@ managed serving engine reachable over HTTP.
 Component placement may change without changing this boundary. Milestone 1 now
 defaults to direct development on the NVIDIA GPU machine, with the gateway,
 vLLM, metrics stack, benchmark tooling, and experiment artifacts managed from
-the same working repo clone. Future milestones may move the same roles onto rented GPU
-VMs or clusters. These are deployment placements, not different application
-architectures.
+the same working repo clone. Future milestones may move the same roles onto
+rented GPU VMs or clusters. These are deployment placements, not different
+application architectures.
+
+| Placement mode | Component placement | Measurement implication |
+| --- | --- | --- |
+| Direct GPU dev baseline | Benchmark runner, gateway, vLLM, metrics stack, and artifacts on the NVIDIA GPU machine | Default Milestone 1 baseline; minimizes gateway-to-backend network noise. |
+| Rented single-node reproduction | Same roles on a rented GPU VM, or benchmark runner on a private client | Useful for cost and portability evidence; record network path and provider details separately. |
+| Future cluster milestone | Gateway, backend workers, metrics, and benchmark runner split across cluster roles | Not Milestone 1 baseline; used later to study orchestration, service networking, and distributed observability. |
 
 ## Request Handling
 
@@ -67,10 +80,10 @@ low `max_tokens`.
 
 Milestone 1 endpoints:
 
-- `/v1/models`
-- `/v1/chat/completions`
-- health endpoint
-- Prometheus metrics endpoint
+- `GET /healthz`
+- `GET /metrics`
+- `GET /v1/models`
+- `POST /v1/chat/completions`
 
 ## Model And Backend Config
 
@@ -85,6 +98,8 @@ The config should describe serving intent:
 - backend model name when it differs from the public name
 - enabled state
 - basic configured limits where useful
+
+The initial routing policy label is `static_single_backend`.
 
 Observed runtime state should not be manually encoded in config. Health,
 availability, backend model lists, load, and later cache locality are runtime
@@ -160,6 +175,27 @@ Milestone 1 should fail loudly and preserve evidence.
 
 Failing loudly does not mean exposing backend stack traces to public clients. It
 means errors are visible in metrics, logs, and saved benchmark artifacts.
+
+## Assumptions
+
+- Model aliases are phase-specific. The active packaged gateway config is the
+  source of truth for the current runnable alias and backend model, while saved
+  experiment folders preserve the exact alias and model used for historical
+  runs.
+- Qwen3 thinking mode is enabled by default in the model/template path. Low
+  `max_tokens` can end generation inside `<think>...</think>` and produce no
+  final answer; this should be documented or warned about, not silently
+  repaired by the gateway.
+- vLLM is external and OpenAI-compatible over HTTP for Milestone 1.
+- The primary dev environment is the NVIDIA GPU machine.
+- The same repo clone owns gateway development, vLLM setup artifacts, benchmark
+  commands, and saved experiment artifacts for Milestone 1.
+- vLLM benchmark tooling is the first reproducible benchmark path. GenAI-Perf
+  can be added later for richer OpenAI-compatible endpoint behavior.
+- Mocked HTTP backends may be used only in tests, clearly separate from real
+  serving code.
+- Public docs and experiment writeups must avoid presenting synthetic or mocked
+  results as real model-serving results.
 
 ## Expected Artifacts
 

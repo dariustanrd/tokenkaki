@@ -2,6 +2,8 @@
 
 This Compose stack runs only the `tokenkaki.gateway` service and Prometheus.
 The vLLM OpenAI-compatible backend remains an external process for Milestone 1.
+Use `deploy/vllm/README.md` as the backend runbook; this document covers the
+containerized gateway and metrics path.
 
 ## Topology
 
@@ -20,15 +22,10 @@ milestone explicitly adds public exposure and auth.
 
 ## Run
 
-Start vLLM first from the repository root:
+Start vLLM first by following `deploy/vllm/README.md`.
 
-```bash
-./deploy/vllm/run-openai-server.sh
-```
-
-If validating the Compose gateway against vLLM, bind vLLM to a private
-Docker-reachable host address instead of loopback. On many Linux hosts this is
-the `docker0` address:
+For Compose validation, bind vLLM to a private Docker-reachable host address
+instead of loopback. On many Linux hosts this is the `docker0` address:
 
 ```bash
 ip -4 addr show docker0
@@ -76,7 +73,7 @@ curl http://127.0.0.1:8000/v1/chat/completions \
   -H 'content-type: application/json' \
   -H 'x-request-id: compose-chat-001' \
   -d '{
-    "model": "qwen3-0.6b",
+    "model": "qwen3-8b",
     "messages": [
       {"role": "user", "content": "Say hello in one short sentence."}
     ],
@@ -110,6 +107,9 @@ tokenkaki_gateway_backend_tokens_total
 - If vLLM listens somewhere else, update `backend.base_url` in that file. The
   default `http://host.docker.internal:8001` assumes Docker can reach vLLM on
   the host gateway address.
+- Reusable benchmark wrapper usage is documented in `benchmarks/README.md`.
+- Exact saved Milestone 1 commands are recorded in
+  `experiments/001_vllm_gateway_baseline/commands.md`.
 - Benchmark results from this stack should still label vLLM as an external
   backend and preserve metric provenance separately from benchmark-observed
   latency.

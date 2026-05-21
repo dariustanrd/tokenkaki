@@ -13,6 +13,8 @@ vLLM benchmark client
 The external vLLM server was started with:
 
 ```bash
+VLLM_MODEL=Qwen/Qwen3-0.6B \
+VLLM_SERVED_MODEL_NAME=Qwen/Qwen3-0.6B \
 VLLM_HOST=172.17.0.1 ./deploy/vllm/run-openai-server.sh
 ```
 
@@ -20,6 +22,8 @@ The benchmark command was:
 
 ```bash
 GATEWAY_BASE_URL=http://127.0.0.1:18000 \
+PUBLIC_MODEL=qwen3-0.6b \
+TOKENIZER_MODEL=Qwen/Qwen3-0.6B \
 NUM_PROMPTS=10 \
 REQUEST_RATE=1 \
 RANDOM_INPUT_LEN=128 \
@@ -48,6 +52,8 @@ output lengths:
 
 | Metric | Value |
 | --- | ---: |
+| Public model alias | `qwen3-0.6b` |
+| Backend/tokenizer model | `Qwen/Qwen3-0.6B` |
 | Requests | 10 |
 | Request rate target | 1 req/s |
 | Benchmark duration | 9.74 s |

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VLLM_MODEL="${VLLM_MODEL:-Qwen/Qwen3-0.6B}"
+VLLM_MODEL="${VLLM_MODEL:-Qwen/Qwen3-8B}"
 VLLM_SERVED_MODEL_NAME="${VLLM_SERVED_MODEL_NAME:-$VLLM_MODEL}"
 VLLM_HOST="${VLLM_HOST:-127.0.0.1}"
 VLLM_PORT="${VLLM_PORT:-8001}"

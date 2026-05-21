@@ -3,6 +3,11 @@
 `tokenkaki` is a staged, runnable LLM inference platform for learning, building,
 and measuring realistic OpenAI-compatible serving systems.
 
+Canonical source note: this document owns the project purpose, learning goals,
+principles, and non-goals. Use the README for navigation,
+[`ARCHITECTURE.md`](ARCHITECTURE.md) for serving/runtime boundaries, and
+[`ROADMAP.md`](ROADMAP.md) for phase and milestone sequencing.
+
 The project focuses on real serving behavior: requests enter through an
 OpenAI-compatible gateway, move through routing and scheduling decisions, reach
 real vLLM or SGLang backends, and produce metrics that can be benchmarked,
@@ -45,11 +50,10 @@ blog-post-ready interpretation.
 
 - Real backends are the normal serving path.
 - Mock workers are only for tests, synthetic load generation, and controlled
-  benchmark scenarios.
-- Model targets depend on the phase; use small Qwen models for dev/CI, real
-  8B-class models for the primary public demo and industry baseline, then move
-  toward reasoning, multimodal, larger single-node, multi-GPU, multi-node, MoE,
-  and disaggregated serving studies as infrastructure allows.
+  benchmark scenarios. Synthetic results must be labeled clearly and must not
+  be presented as real serving results.
+- Model targets depend on the phase and must be verified before implementation;
+  the current phase index lives in [`ROADMAP.md`](ROADMAP.md).
 - Every stage must be runnable.
 - Every stage must produce benchmark evidence.
 - Every result should be written up with enough detail to reproduce and explain.

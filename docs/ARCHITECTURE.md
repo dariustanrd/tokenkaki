@@ -3,6 +3,11 @@
 `tokenkaki` is organized around an OpenAI-compatible inference endpoint backed
 by real model serving engines.
 
+Canonical source note: this document owns durable serving, module, and runtime
+boundaries. Use the README for navigation, [`VISION.md`](VISION.md) for why and
+principles, [`ROADMAP.md`](ROADMAP.md) for the milestone index, and
+[`DEMO_STRATEGY.md`](DEMO_STRATEGY.md) for public/demo access posture.
+
 ## Serving Path
 
 The serving architecture is stable across milestones: clients call an
@@ -32,7 +37,7 @@ Client, demo UI, or benchmark runner
      - load, queue, and cache-locality signals where available
   -> backend client
      - OpenAI-compatible HTTP call to vLLM
-     - SGLang client after the vLLM path is measurable (low priority, only consider after all milestones are complete / near completion)
+     - SGLang client after the vLLM path is measurable and late milestones are near completion
   -> backend serving engine
      - tokenizer and request admission
      - prefill
@@ -72,7 +77,7 @@ used for each run.
 Component placement is a deployment concern rather than a code boundary.
 Milestone 1 development now runs directly on the NVIDIA GPU machine, with the
 gateway, vLLM, metrics stack, benchmarks, and experiment artifacts on the same
-host by default. Configured backend addresses and deployment artifacts should 
+host by default. Configured backend addresses and deployment artifacts should
 change across those modes; gateway architecture should not.
 
 Telemetry is emitted alongside the serving path rather than after it:
@@ -141,6 +146,10 @@ learning questions.
 | 7. Multi-node serving | Cross-node runtime behavior | Add network, distributed runtime, and failure-mode evidence around backend execution. |
 | 8. Cache-aware routing | Scheduler input quality | Add prefix or cache-locality signals while accepting that true KV state may only be available if backend engines expose it. |
 | 9. Disaggregated prefill/decode | Split backend execution pools | Route to or measure prefill/decode-aware serving without making the gateway own model execution. |
+
+The milestone index lives in [`ROADMAP.md`](ROADMAP.md); this
+document records the durable rule that milestones expand the same logical
+serving path instead of replacing it.
 
 ## Repository Architecture
 
@@ -227,7 +236,8 @@ Real backends are the production path.
 Initial backend order:
 
 1. vLLM
-2. SGLang
+2. SGLang, after the vLLM path is measurable and late milestones are near
+   completion
 3. Additional engines only after the first two paths are measurable
 
 Mock workers must remain separate from real serving code. They may be used for:
@@ -238,20 +248,5 @@ Mock workers must remain separate from real serving code. They may be used for:
 - deterministic scheduler tests
 
 They must not become the default runtime path or leak test-only behavior into
-real backend clients.
-
-## Demo Posture
-
-The public demo should show the real endpoint shape and benchmark artifacts
-without allowing uncontrolled GPU spend.
-
-Use a hybrid access model:
-
-- public limited access for cheap live calls or replay mode
-- authenticated access for real-model calls
-- quotas and rate limits for every live backend
-- visible benchmark reports for expensive experiments
-- kill switch and teardown path for GPU-backed deployments
-
-This is part of the platform design, not an afterthought: cost controls,
-capacity limits, and usage visibility are serving-system concerns.
+real backend clients. Synthetic benchmark or load-test results must be labeled
+as synthetic and must not be presented as real serving results.

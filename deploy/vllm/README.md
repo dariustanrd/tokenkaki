@@ -65,11 +65,11 @@ set -a
 set +a
 ```
 
-The defaults match the packaged gateway config:
+For the current packaged gateway config, set the backend model values to:
 
 ```text
-public gateway alias: qwen3-0.6b
-vLLM backend model: Qwen/Qwen3-0.6B
+public gateway alias: qwen3-8b
+vLLM backend model: Qwen/Qwen3-8B
 vLLM base URL: http://127.0.0.1:8001
 CUDA_DEVICE_ORDER: PCI_BUS_ID
 CUDA_VISIBLE_DEVICES: 4
@@ -137,8 +137,8 @@ backend to a different GPU and record the change in the experiment artifact.
 Useful overrides:
 
 ```bash
-VLLM_MODEL="Qwen/Qwen3-0.6B" \
-VLLM_SERVED_MODEL_NAME="Qwen/Qwen3-0.6B" \
+VLLM_MODEL="Qwen/Qwen3-8B" \
+VLLM_SERVED_MODEL_NAME="Qwen/Qwen3-8B" \
 VLLM_HOST="127.0.0.1" \
 VLLM_PORT="8001" \
 CUDA_VISIBLE_DEVICES="4" \
@@ -151,7 +151,7 @@ VLLM_EXTRA_ARGS="--max-model-len 4096 --gpu-memory-utilization 0.85" \
 Run these before routing any traffic through the gateway:
 
 ```bash
-./deploy/vllm/smoke-openai.sh
+VLLM_MODEL="Qwen/Qwen3-8B" ./deploy/vllm/smoke-openai.sh
 ```
 
 The smoke script checks:
@@ -163,18 +163,23 @@ These checks prove the external backend is reachable and serving the configured
 model. They do not prove gateway forwarding; that belongs to the next tracer
 bullet slice.
 
+For gateway and Prometheus validation through Docker Compose, use
+`deploy/compose/README.md`. Compose needs vLLM bound to a private
+Docker-reachable host address because the gateway container cannot reach a host
+process that listens only on `127.0.0.1`.
+
 ## Gateway Config Compatibility
 
 The current packaged gateway config expects:
 
 ```yaml
 models:
-  - name: qwen3-0.6b
+  - name: qwen3-8b
     enabled: true
     backend:
       type: vllm
       base_url: http://127.0.0.1:8001
-      model: Qwen/Qwen3-0.6B
+      model: Qwen/Qwen3-8B
 ```
 
 If you change `VLLM_PORT`, `VLLM_HOST`, or `VLLM_SERVED_MODEL_NAME`, also update
@@ -195,3 +200,7 @@ For every saved Milestone 1 result, record:
 - cache paths such as `HF_HOME` and `VLLM_CACHE_ROOT`
 - `VLLM_EXTRA_ARGS`
 - whether the benchmark runner was same-host or a private remote client
+
+Reusable gateway benchmark wrapper usage lives in `benchmarks/README.md`.
+Exact saved command logs for Milestone 1 live in
+`experiments/001_vllm_gateway_baseline/commands.md`.

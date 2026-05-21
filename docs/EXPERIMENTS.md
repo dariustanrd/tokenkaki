@@ -4,6 +4,10 @@ This project is benchmark-first. A stage is not complete until it produces a
 runnable artifact, a reproducible benchmark, saved results, and an interpretation
 that can be reviewed later.
 
+This file is the canonical source for experiment completion criteria, metric
+provenance, artifact layout, and report structure. Saved milestone folders under
+`experiments/` record exact historical commands and results.
+
 ## Stage Definition Of Done
 
 Each stage must include:

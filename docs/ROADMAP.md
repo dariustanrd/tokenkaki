@@ -3,9 +3,15 @@
 The roadmap is staged around learning objectives, real backends, runnable
 artifacts, benchmark evidence, saved results, and writeups.
 
+Canonical source note: this document owns phase model targets and milestone
+sequence. Use the README for navigation, [`VISION.md`](VISION.md) for project
+purpose, and [`ARCHITECTURE.md`](ARCHITECTURE.md) for repository, serving, and
+runtime boundaries.
+
 Real backends are the default for portfolio stages. Mock workers are allowed
 only as isolated test and load-generation utilities, especially when validating
-gateway behavior under many simulated clients.
+gateway behavior under many simulated clients. Synthetic results must be labeled
+clearly and must not be presented as real serving results.
 
 ## Phase Model Targets
 
@@ -34,17 +40,8 @@ gateway to a real vLLM backend and measure baseline serving behavior.
 Detailed design:
 [`docs/milestones/001_vllm_gateway_baseline.md`](milestones/001_vllm_gateway_baseline.md).
 
-Repository foundation:
-
-- `uv` for Python package and dependency management
-- Python-first package under `src/tokenkaki/`
-- one initial runtime service: `tokenkaki.gateway`
-- deep modules for gateway, router, backends, registry, observability, auth, and
-  config
-- benchmark tooling under `benchmarks/`
-- saved Milestone 1 artifacts under `experiments/001_vllm_gateway_baseline/`
-- deployment artifacts under `deploy/compose/`, with Kubernetes-family manifests
-  deferred until a kind, k3s, k3d, or cloud Kubernetes milestone starts
+Repository and runtime boundaries:
+[`docs/ARCHITECTURE.md`](ARCHITECTURE.md).
 
 Deployment target:
 
