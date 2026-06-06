@@ -1,6 +1,6 @@
 Contains introduction to the project.
 
-Title: "Behind the API #0: Building a Multi-Node LLM Inference Platform"
+Title: "Behind the API #0: From a vLLM OpenAI-compatible endpoint to a Multi-Node Inference Platform"
 
 Purpose:
 - Introduce tokenkaki as a staged, runnable LLM inference platform portfolio project.

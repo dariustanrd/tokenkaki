@@ -14,6 +14,11 @@ Current packaged gateway config uses public alias `qwen3-8b` backed by
 `qwen3-0.6b` are historical provenance for the first validated run, not the
 current default.
 
+The old Milestone 1 experiment results have been removed. The next Milestone 1
+experiment should regenerate evidence for the current `qwen3-8b` default using
+the benchmark ladder defined in `001_vllm_gateway_baseline.md`: vLLM engine
+latency, vLLM engine throughput, direct vLLM serving, then gateway serving.
+
 ## Tracer-Bullet Slices
 1. **Runnable Gateway Skeleton** - Completed
    - Add `uv` Python project scaffold and `src/tokenkaki/`.
@@ -84,7 +89,7 @@ current default.
    - Why: Milestone 1 should preserve evidence for learning, and metrics are the least invasive first step.
    - Implication: no auth, quotas, smart retries, failover, or broader error-policy changes are added yet.
 
-7. **Compose, Benchmark, And Experiment Artifact Path** - Completed
+7. **Compose, Benchmark, And Experiment Artifact Path** - Completed infrastructure, benchmark rerun pending
    - Added `deploy/compose/` for gateway and Prometheus scraping only.
    - vLLM remains a separately managed external GPU-backed server for Milestone 1.
    - Added Compose-specific gateway config pointing from the gateway container to host vLLM through `http://host.docker.internal:8001`.
@@ -94,11 +99,25 @@ current default.
    - Added configurable published Compose ports through `TOKENKAKI_GATEWAY_PORT` and `TOKENKAKI_PROMETHEUS_PORT`.
    - Added `benchmarks/vllm-gateway-serving.sh` using pinned `vllm bench serve` with OpenAI chat endpoint settings and raw JSON output under `experiments/001_vllm_gateway_baseline/raw/`.
    - Added `benchmarks/README.md` with benchmark wrapper usage, smoke command, and provenance notes.
-   - Added `experiments/001_vllm_gateway_baseline/` with `README.md`, `commands.md`, `configs/`, `raw/`, `plots/`, and `report.md`.
-   - Documented benchmark wrapper arguments in `experiments/001_vllm_gateway_baseline/commands.md`, including gateway URL, public model alias, tokenizer model, prompt count, request rate, input/output token lengths, result path, and fixed vLLM chat endpoint options.
-   - Copied the exact gateway, Compose, Prometheus, vLLM launch, and benchmark wrapper configs used for the saved run into `experiments/001_vllm_gateway_baseline/configs/`.
-   - Saved raw benchmark and observability artifacts under `experiments/001_vllm_gateway_baseline/raw/`.
-   - Wrote the first benchmark interpretation in `experiments/001_vllm_gateway_baseline/report.md`.
+   - Added the experiment artifact layout under `experiments/001_vllm_gateway_baseline/`.
+   - Historical saved benchmark outputs were removed; the next run should
+     repopulate this folder with current `qwen3-8b` evidence.
+   - Updated benchmark plan:
+     - Run `vllm bench latency` for the selected model/GPU/backend config.
+     - Run `vllm bench throughput` for offline backend engine capacity.
+     - Run `vllm bench serve` directly against the external vLLM server.
+     - Run `vllm bench serve` against `tokenkaki.gateway`.
+     - Save gateway metrics and Prometheus target snapshots after the gateway
+       serving run.
+     - Interpret direct vLLM serving vs gateway serving under matched workload
+       settings to estimate gateway overhead.
+   - Suggested current raw artifacts:
+     - `vllm-latency-qwen3-8b-a100.json`
+     - `vllm-throughput-qwen3-8b-a100.json`
+     - `vllm-direct-serving-qwen3-8b-a100.json`
+     - `vllm-gateway-serving-qwen3-8b-a100.json`
+     - `gateway-metrics-after-qwen3-8b-a100.prom`
+     - `prometheus-targets-after-qwen3-8b-a100.json`
    - Verified with:
      - `docker compose -f deploy/compose/compose.yaml config`.
      - `TOKENKAKI_GATEWAY_PORT=18000 TOKENKAKI_PROMETHEUS_PORT=19090 docker compose -f deploy/compose/compose.yaml up --build -d`.
@@ -109,12 +128,13 @@ current default.
      - Final acceptance checks: `uv run pytest`, direct external vLLM `/v1/models`, Compose gateway non-streaming chat, Compose gateway streaming chat, and Prometheus target health.
      - A Compose chat request while vLLM was bound to host loopback produced the expected gateway `502` and backend connection failure metrics, confirming the failure is visible.
      - Restarted external vLLM with `VLLM_HOST=172.17.0.1 ./deploy/vllm/run-openai-server.sh`, then verified a successful non-streaming `/v1/chat/completions` request through the Compose gateway on `http://127.0.0.1:18000`.
-     - Verified benchmark command shape with a one-request smoke run: `GATEWAY_BASE_URL=http://127.0.0.1:18000 NUM_PROMPTS=1 REQUEST_RATE=1 RANDOM_INPUT_LEN=16 RANDOM_OUTPUT_LEN=8 RESULT_FILENAME=vllm-gateway-serving-smoke.json ./benchmarks/vllm-gateway-serving.sh`.
-     - Saved raw smoke output at `experiments/001_vllm_gateway_baseline/raw/vllm-gateway-serving-smoke.json`.
-     - Ran a small non-smoke Compose benchmark: `GATEWAY_BASE_URL=http://127.0.0.1:18000 NUM_PROMPTS=10 REQUEST_RATE=1 RANDOM_INPUT_LEN=128 RANDOM_OUTPUT_LEN=64 RESULT_FILENAME=vllm-gateway-serving-compose-small.json ./benchmarks/vllm-gateway-serving.sh`.
-     - Saved `gateway-metrics-after-compose-small.prom` and `prometheus-targets-after-compose-small.json`.
+     - Earlier historical run verified benchmark command shape and Compose
+       gateway serving with `qwen3-0.6b`; those artifacts are no longer present.
    - Why: every stage must produce runnable/deployable code, a reproducible benchmark command, saved artifacts, and interpretation.
-   - Implication: benchmark-observed latency, gateway-observed latency, backend usage, and GPU metrics are kept separate.
+   - Implication: backend engine latency/throughput, direct vLLM serving,
+     gateway serving, gateway metrics, backend usage, and GPU metrics are kept
+     separate. This makes gateway overhead and backend capacity visible instead
+     of collapsing all evidence into one benchmark number.
 
 ## Canonical Design Contract
 Use `001_vllm_gateway_baseline.md` as the canonical source for:
@@ -140,4 +160,8 @@ and reference that change from the relevant slice here.
   - gateway runs on the same GPU machine with a loopback vLLM backend URL for single-node validation
   - Compose starts gateway and Prometheus with configurable vLLM URL
   - `curl` verifies health, models, non-streaming chat, and streaming chat against real vLLM
-  - documented vLLM benchmark command runs against the gateway and saves raw output under the milestone experiment folder
+  - `vllm bench latency` saves engine latency output under the milestone experiment folder
+  - `vllm bench throughput` saves offline engine throughput output under the milestone experiment folder
+  - `vllm bench serve` runs directly against vLLM and saves raw output under the milestone experiment folder
+  - `vllm bench serve` runs against the gateway and saves raw output under the milestone experiment folder
+  - gateway metrics and Prometheus target snapshots are saved after the gateway serving benchmark

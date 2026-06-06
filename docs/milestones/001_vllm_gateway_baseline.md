@@ -161,6 +161,63 @@ Every saved experiment should record where the benchmark runner, gateway, vLLM
 backend, and metrics stack ran, plus the network path between them. Same-host
 gateway-to-vLLM runs are the default Milestone 1 baseline.
 
+## Benchmark Evidence Ladder
+
+Milestone 1 should produce a small but layered benchmark set instead of only a
+single gateway result. The gateway benchmark remains the milestone acceptance
+path, but backend-only baselines make the final result easier to interpret.
+
+Run the evidence ladder in this order:
+
+1. **vLLM engine latency**: use `vllm bench latency` to measure one controlled
+   in-process vLLM batch. This is the lower-level latency floor for the selected
+   model, GPU, input length, output length, dtype, and vLLM engine flags.
+2. **vLLM engine throughput**: use `vllm bench throughput` to measure offline
+   engine token throughput without HTTP serving or gateway overhead. This is the
+   raw backend capacity reference.
+3. **Direct vLLM serving**: use `vllm bench serve` against the running vLLM
+   OpenAI-compatible server. This measures online HTTP serving behavior,
+   including request scheduling, streaming cadence, TTFT, TPOT/ITL, and server
+   overhead.
+4. **Gateway serving**: use `vllm bench serve` against `tokenkaki.gateway`.
+   This measures the public Milestone 1 path:
+
+   ```text
+   benchmark client
+     -> tokenkaki.gateway
+     -> external vLLM OpenAI-compatible HTTP server
+     -> GPU execution
+   ```
+
+5. **Comparison**: compare direct vLLM serving with gateway serving under the
+   same model, request rate, prompt length, output length, sampling settings,
+   GPU, and vLLM server flags. The difference is the first estimate of gateway
+   overhead for the public path.
+
+The first two steps are backend baselines, not gateway acceptance checks. They
+should not block validating the gateway path, but they should be saved for any
+Milestone 1 result that will be interpreted or published.
+
+Suggested raw artifact names:
+
+```text
+experiments/001_vllm_gateway_baseline/raw/
+  vllm-latency-qwen3-8b-a100.json
+  vllm-throughput-qwen3-8b-a100.json
+  vllm-direct-serving-qwen3-8b-a100.json
+  vllm-gateway-serving-qwen3-8b-a100.json
+  gateway-metrics-after-qwen3-8b-a100.prom
+  prometheus-targets-after-qwen3-8b-a100.json
+```
+
+The report should separate:
+
+- engine-only latency and throughput
+- direct vLLM server behavior
+- gateway-to-vLLM public-path behavior
+- gateway-observed Prometheus metrics
+- GPU/system observations where available
+
 ## Failure Policy
 
 Milestone 1 should fail loudly and preserve evidence.
@@ -190,8 +247,10 @@ means errors are visible in metrics, logs, and saved benchmark artifacts.
 - The primary dev environment is the NVIDIA GPU machine.
 - The same repo clone owns gateway development, vLLM setup artifacts, benchmark
   commands, and saved experiment artifacts for Milestone 1.
-- vLLM benchmark tooling is the first reproducible benchmark path. GenAI-Perf
-  can be added later for richer OpenAI-compatible endpoint behavior.
+- vLLM benchmark tooling is the first reproducible benchmark path. Use
+  `vllm bench latency` and `vllm bench throughput` for backend engine baselines,
+  and `vllm bench serve` for direct vLLM and gateway online serving baselines.
+  GenAI-Perf can be added later for richer OpenAI-compatible endpoint behavior.
 - Mocked HTTP backends may be used only in tests, clearly separate from real
   serving code.
 - Public docs and experiment writeups must avoid presenting synthetic or mocked
@@ -208,5 +267,6 @@ means errors are visible in metrics, logs, and saved benchmark artifacts.
 - streaming and non-streaming `/v1/chat/completions`
 - `/v1/models` returning gateway public model aliases
 - Prometheus metrics for gateway-observed request behavior
-- reproducible benchmark command against the gateway endpoint
+- reproducible benchmark commands for vLLM engine latency, vLLM engine
+  throughput, direct vLLM serving, and gateway serving
 - saved results under `experiments/001_vllm_gateway_baseline/`

@@ -3,11 +3,10 @@ Contains introduction to the project.
 Title: "Behind the API #1: vLLM - the core runtime inference engine of choice"
 
 Purpose:
-- setting up a thin gateway for vLLM
+- setting up a thin gateway for vLLM (ofc SGLang could be used too, but use vLLM here - give reasons why too)
 - not diving deep into vLLM internals
   - in fact i don't even want to modify code internal to vLLM yet, want it to be pure and clean vllm
-- baseline measurements
-- first set of measurements of the gateway (with vllm internals), minimal change expected
+- first baseline layered measurement of the serving path (engine only > vllm server > gateway)
 
 Scope for this post:
 - running vLLM via uv baremetal on the machine without docker container i.e.
@@ -17,11 +16,11 @@ Scope for this post:
   the gateway was containerized because it is the service boundary we are building, and vLLM was kept external/native because it is the backend engine we are learning to integrate and measure.
   - this will change later, when we want to move towards multi-node / kubernetes etc.
 - benchmarking done using: 
-  - vllm bench latency, vllm bench throughput
-  - vllm bench serve for vllm directly
-  - finally the default vllm bench serve tool for gateway + vllm
+  - engine-only vLLM baseline (`vllm bench latency`, `vllm bench throughput`)
+  - direct vLLM HTTP serving baseline (`vllm bench serve` - vllm server)
+  - gateway-to-vLLM public path ( `vllm bench serve` - gateway + vllm)
 - why:
-  - simple native tool that can measure the gateway + vllm internal inference perf
+  - native tool that can measure the gateway + vllm internal inference perf
 
 Next post:
-- Behind the API #2:
+- Behind the API #2: ?
