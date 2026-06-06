@@ -13,6 +13,10 @@ OpenAI-compatible gateway, move through routing and scheduling decisions, reach
 real vLLM or SGLang backends, and produce metrics that can be benchmarked,
 interpreted, and improved.
 
+A possible later expansion is a heterogeneous enterprise inference fabric, but
+the project should earn that platform arc by first measuring the serving
+fundamentals in the original roadmap.
+
 ## Learning Objective
 
 The main learning objective is to understand the full inference serving path:
@@ -41,6 +45,8 @@ help answer questions such as:
   Kubernetes, multi-GPU, or multi-node deployments?
 - How do benchmark results translate into deployment, scaling, and cost
   tradeoffs?
+- Which signals would a future fleet scheduler need before it can make credible
+  placement decisions across heterogeneous machines?
 
 Each stage should be explainable as a concrete systems artifact: working
 endpoint or deployment, benchmark evidence, saved results, and a
@@ -68,3 +74,6 @@ blog-post-ready interpretation.
 - Entangling mock workers with production serving code.
 - Adding dashboards, schedulers, or orchestration layers before they are tied to
   measurable serving behavior.
+- Building worker agents, fleet registration, network policy, or
+  deadline-aware agent-job scheduling before the original serving roadmap has
+  produced routing, tuning, topology, and cache-locality evidence.

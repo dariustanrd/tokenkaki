@@ -130,6 +130,13 @@ As the project grows, the same logical path expands rather than changing shape:
   the gateway still receives an OpenAI-compatible request and returns an
   OpenAI-compatible response
 
+A future heterogeneous-fleet expansion should also grow out of this path rather
+than replace it. In that arc, the gateway still owns the public
+OpenAI-compatible request lifecycle; a control plane may later own fleet state,
+worker registration, placement policy, and network/site metadata; worker agents
+may later report machine capabilities and manage local runtimes. Those are
+future runtime boundaries, not Milestone 1 responsibilities.
+
 ## Milestone Evolution
 
 The architecture should stay milestone-specific where the details are still
@@ -146,6 +153,7 @@ learning questions.
 | 7. Multi-node serving | Cross-node runtime behavior | Add network, distributed runtime, and failure-mode evidence around backend execution. |
 | 8. Cache-aware routing | Scheduler input quality | Add prefix or cache-locality signals while accepting that true KV state may only be available if backend engines expose it. |
 | 9. Disaggregated prefill/decode | Split backend execution pools | Route to or measure prefill/decode-aware serving without making the gateway own model execution. |
+| Future fleet expansion | Control plane and heterogeneous workers | Add worker registration, node capabilities, network locality, runtime diversity, and agent-aware scheduling only after serving signals are measurable. |
 
 The milestone index lives in [`ROADMAP.md`](ROADMAP.md); this
 document records the durable rule that milestones expand the same logical
@@ -213,6 +221,18 @@ service objects only when a component owns lifecycle or mutable state.
 - **Benchmarks**: generate repeatable workloads and save raw results for later
   analysis.
 
+Future fleet components should stay conceptual until they have a measurable
+serving reason:
+
+- **Control plane**: owns fleet state, policy, and placement only after static
+  registry and routing experiments are insufficient.
+- **Worker agent**: reports GPU/runtime/model capability and manages local
+  inference runtimes only after multi-backend and deployment experiments show
+  the need for dynamic registration.
+- **Agent-job scheduler**: accepts deadline, budget, urgency, and token-profile
+  intent only after workload-shape and routing benchmarks establish useful
+  scheduling signals.
+
 ## Initial Runtime Boundary
 
 The gateway is the only first-class runtime service at the start. It owns the
@@ -222,6 +242,12 @@ handoff, metrics emission, and calls to backend clients.
 Do not make benchmark runners or mock workers initial runtime services. They may
 be executable tools or test fixtures, but service extraction should happen only
 after there is a concrete deployment, scaling, or lifecycle reason.
+
+Do not introduce a worker-agent service, fleet control plane, or agent-job API
+as early runtime services. Preserve extensible names and experiment metadata
+where cheap, but keep the serving path centered on the gateway, registry,
+router, backend client, and real backend engine until the original roadmap
+requires more.
 
 vLLM is a real runtime process, but it is an external backend owned by deployment
 artifacts and environment setup, not by the `tokenkaki` Python package. The

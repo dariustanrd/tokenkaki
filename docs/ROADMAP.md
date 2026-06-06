@@ -13,6 +13,15 @@ only as isolated test and load-generation utilities, especially when validating
 gateway behavior under many simulated clients. Synthetic results must be labeled
 clearly and must not be presented as real serving results.
 
+Future expansion note: the roadmap may later grow into a heterogeneous
+enterprise inference fabric: an OpenAI-compatible internal API backed by a
+control plane that understands GPU servers, Kubernetes clusters, workstation
+capacity, runtime variants, network locality, and agent workload intent. That is
+an end-state direction, not an early milestone rewrite. The original milestone
+sequence remains the serving-knowledge path; each stage should collect signals
+that would make the future platform credible rather than building a scheduler
+before the serving behavior is understood.
+
 ## Phase Model Targets
 
 Model targets are phase-dependent. Verify exact model availability, serving
@@ -86,6 +95,10 @@ Outputs:
 Learning objective: understand why LLM routing is not the same as ordinary HTTP
 load balancing.
 
+Future-fabric intuition: this is the first step toward fleet routing. Keep the
+implementation focused on real backend replicas and simple policies, but avoid
+hardcoding assumptions that a model has only one backend URL forever.
+
 Outputs:
 
 - multiple real vLLM workers where infrastructure allows
@@ -101,6 +114,11 @@ Outputs:
 Learning objective: measure how vLLM serving parameters and workload shape
 affect latency and throughput.
 
+Future-fabric intuition: this stage explains why token profiles matter. A later
+agent-aware scheduler can only be meaningful if earlier benchmarks show how
+short prompts, long prompts, long generations, concurrency, and queueing change
+TTFT, TPOT, throughput, and cost.
+
 Outputs:
 
 - batching and concurrency sweep scripts
@@ -112,6 +130,10 @@ Outputs:
 
 Learning objective: compare memory, latency, throughput, and quality tradeoffs
 across model formats.
+
+Future-fabric intuition: heterogeneous fleets need model/runtime placement
+judgment. Quantization and model variants teach when weaker or smaller hardware
+can serve useful traffic, and what quality or latency tradeoff that introduces.
 
 Outputs:
 
@@ -126,9 +148,14 @@ Outputs:
 Learning objective: move from a local service layout to a realistic orchestrated
 serving environment.
 
+Future-fabric intuition: Kubernetes is one managed substrate for the later
+platform, not the whole platform. This milestone should teach service discovery,
+GPU scheduling, rollout, scrape configuration, and cluster networking without
+assuming all future enterprise capacity will live in Kubernetes.
+
 Outputs:
 
-- Kubernetes deployment for gateway and worker path
+- Kubernetes deployment for gateway and backend path
 - GPU scheduling notes using the NVIDIA device plugin
 - Prometheus/Grafana integration
 - reproducible deployment and teardown instructions
@@ -139,6 +166,11 @@ Outputs:
 
 Learning objective: understand what changes when one serving setup spans
 multiple GPUs.
+
+Future-fabric intuition: this separates routing across replicas from splitting
+one model across GPUs. A future control plane needs to know when a workload can
+run on one warm replica versus when model execution itself requires topology,
+NCCL, and interconnect-aware placement.
 
 Outputs:
 
@@ -153,6 +185,11 @@ Outputs:
 Learning objective: measure the operational and networking issues that appear
 when serving crosses node boundaries.
 
+Future-fabric intuition: this is the evidence base for network-aware routing.
+It should record when a remote idle GPU is worse than a local busier backend,
+and when cross-node or cross-site placement is acceptable for batch or
+non-latency-sensitive work.
+
 Outputs:
 
 - short-lived multi-node setup
@@ -165,6 +202,10 @@ Outputs:
 ## Milestone 8: Cache-Aware Routing
 
 Learning objective: treat prefix and KV cache locality as scheduling inputs.
+
+Future-fabric intuition: this is where inference routing becomes clearly
+different from ordinary service load balancing. The best backend may be the one
+with useful context/cache locality, not simply the least-loaded one.
 
 Outputs:
 
@@ -180,6 +221,10 @@ Outputs:
 Learning objective: understand the resource split between prefill and decode
 and the cost of moving state between them.
 
+Future-fabric intuition: this is the advanced serving capstone before any
+enterprise-fleet expansion. It combines workload shape, topology, cache state,
+separate queues, and network cost into one scheduling problem.
+
 Outputs:
 
 - simulation or deployment comparison depending on available infrastructure
@@ -187,3 +232,23 @@ Outputs:
 - KV transfer or handoff cost model
 - benchmark against colocated serving
 - writeup mapping the experiment to production-style disaggregated serving
+
+## Future Expansion: Heterogeneous Fleet And Agent-Aware Scheduling
+
+This expansion should start only after the original roadmap has produced enough
+serving evidence to make scheduler decisions defensible. It should not change
+Milestone 1, and it should not pull worker agents or fleet control-plane work
+into early routing and tuning stages.
+
+Likely future milestones:
+
+- fleet registry and worker-agent prototype for node capabilities, warm models,
+  runtime type, reliability tier, queue/load, and owner policy
+- network-aware routing across local, Tailscale, private WAN/VPC, and
+  Kubernetes service paths
+- runtime diversity experiments such as vLLM for production NVIDIA servers and
+  llama.cpp or other runtimes for weaker or opportunistic nodes
+- agent-job API for goal, budget, deadline, quality, urgency, and estimated
+  token profile once workload-shape benchmarks exist
+- policy and accounting work for team quotas, priority, and safe use of
+  opportunistic workstation capacity
