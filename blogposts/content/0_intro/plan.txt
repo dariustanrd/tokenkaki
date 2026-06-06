@@ -1,11 +1,13 @@
 Contains introduction to the project.
 
-Title: "Behind the API #1: Building a Multi-Node LLM Inference Platform"
+Title: "Behind the API #0: Building a Multi-Node LLM Inference Platform"
 
 Purpose:
 - Introduce tokenkaki as a staged, runnable LLM inference platform portfolio project.
 - Explain the ecosystem in Singapore for inference optimization and engineering
+- Explain personal motivations to just build the thing and reference previous blogpost
 - Describe the end state: a deployable OpenAI-compatible inference endpoint with real backends, routing, observability, benchmarks, and cost controls.
+  - Potentially with later add ons for other ideas: answer vs agentic inference scheduling (AIE SG MiniMax talk), heterogenous GPU inference fabric (using old GPU workstations)
 - Explain that every later post will include runnable artifacts, benchmark results, saved data, and interpretation.
 
 Scope for this post:
@@ -18,3 +20,6 @@ Scope for this post:
 - Demo strategy: public limited live mode, authenticated live mode, benchmark mode, and replay/report mode for expensive experiments.
 
 Subsequent posts will be tagged to phases, always in the series "Behind the API #X".
+
+Next post:
+- Behind the API #1: vLLM - the core runtime inference engine of choice (milestone 1)

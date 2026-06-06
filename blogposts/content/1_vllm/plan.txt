@@ -1,0 +1,27 @@
+Contains introduction to the project.
+
+Title: "Behind the API #1: vLLM - the core runtime inference engine of choice"
+
+Purpose:
+- setting up a thin gateway for vLLM
+- not diving deep into vLLM internals
+  - in fact i don't even want to modify code internal to vLLM yet, want it to be pure and clean vllm
+- baseline measurements
+- first set of measurements of the gateway (with vllm internals), minimal change expected
+
+Scope for this post:
+- running vLLM via uv baremetal on the machine without docker container i.e.
+  only gateway runs in a container, and we comms with the vLLM on the machine directly
+- why:
+  - proving and measuring a real OpenAI-compatible gateway-to-vLLM serving path, while avoiding premature GPU-container complexity; 
+  the gateway was containerized because it is the service boundary we are building, and vLLM was kept external/native because it is the backend engine we are learning to integrate and measure.
+  - this will change later, when we want to move towards multi-node / kubernetes etc.
+- benchmarking done using: 
+  - vllm bench latency, vllm bench throughput
+  - vllm bench serve for vllm directly
+  - finally the default vllm bench serve tool for gateway + vllm
+- why:
+  - simple native tool that can measure the gateway + vllm internal inference perf
+
+Next post:
+- Behind the API #2:
