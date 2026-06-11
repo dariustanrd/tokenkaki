@@ -24,7 +24,6 @@ dist/
 !.env.example
 
 # Logs and runtime scratch files
-*.log
 *.pid
 .DS_Store
 
