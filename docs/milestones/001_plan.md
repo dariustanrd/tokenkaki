@@ -97,7 +97,7 @@ latency, vLLM engine throughput, direct vLLM serving, then gateway serving.
    - Added Compose run and verification docs.
    - Added `.dockerignore` for small Docker build context.
    - Added configurable published Compose ports through `TOKENKAKI_GATEWAY_PORT` and `TOKENKAKI_PROMETHEUS_PORT`.
-   - Added `benchmarks/vllm-gateway-serving.sh` using pinned `vllm bench serve` with OpenAI chat endpoint settings and JSON output under `experiments/001_vllm_gateway_baseline/4_gateway_serve/`.
+   - Added `benchmarks/vllm-serving-bench.sh` using pinned `vllm bench serve` with OpenAI chat endpoint settings and JSON output under `experiments/001_vllm_gateway_baseline/4_gateway_serve/`.
    - Added `benchmarks/README.md` with benchmark wrapper usage, smoke command, and provenance notes.
    - Added the experiment artifact layout under `experiments/001_vllm_gateway_baseline/`.
    - Historical saved benchmark outputs were removed; the next run should

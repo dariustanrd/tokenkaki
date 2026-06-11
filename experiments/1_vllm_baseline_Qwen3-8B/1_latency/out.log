@@ -8,7 +8,7 @@ uv run vllm bench latency \
   --output-len 64 \
   --num-iters-warmup 10 \
   --num-iters 30 \
-  --output-json ../../experiments/1_vllm_baseline_Qwen3-8B/1_latency/raw/vllm-latency-qwen3-8b-a100.json
+  --output-json ../../experiments/1_vllm_baseline_Qwen3-8B/1_latency/vllm-latency-qwen3-8b-a100.json
 INFO 06-10 13:08:07 [__init__.py:244] Automatically detected platform cuda.
 INFO 06-10 13:08:16 [config.py:841] This model supports multiple tasks: {'generate', 'embed', 'classify', 'reward'}. Defaulting to 'generate'.
 INFO 06-10 13:08:16 [config.py:1472] Using max model len 40960

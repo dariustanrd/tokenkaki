@@ -174,6 +174,9 @@ Thus at the end our total usage = ~39GB, with breakdown as per:
 
 2. Some optimizations are already enabled by default.
 
+FlashInfer
+Flash Attention
+
 TODO: look into the logs more here.
 
 another thing we can notice at this point is that cold start time is quite long, mainly because of this step: 
