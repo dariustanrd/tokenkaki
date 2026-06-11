@@ -202,5 +202,7 @@ For every saved Milestone 1 result, record:
 - whether the benchmark runner was same-host or a private remote client
 
 Reusable gateway benchmark wrapper usage lives in `benchmarks/README.md`.
-Exact saved command logs for Milestone 1 live in
-`experiments/001_vllm_gateway_baseline/commands.md`.
+Published Milestone 1 benchmark commands and interpretation should live in the
+relevant `Behind the API` blogpost or experiment writeup. Keep raw vLLM startup
+logs, benchmark JSON, stdout/stderr captures, and metrics snapshots under the
+matching `experiments/` milestone folder.

@@ -24,7 +24,7 @@ curl -fsS "${VLLM_API_BASE}/v1/chat/completions" \
     }
   ],
   "temperature": 0,
-  "max_tokens": 16,
+  "max_tokens": 128,
   "stream": false
 }
 JSON

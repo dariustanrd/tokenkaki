@@ -6,7 +6,8 @@ that can be reviewed later.
 
 This file is the canonical source for experiment completion criteria, metric
 provenance, artifact layout, and report structure. Saved milestone folders under
-`experiments/` record exact historical commands and results.
+`experiments/` preserve raw historical evidence. Blogposts or dedicated writeups
+carry the interpreted command, setup, result summary, and conclusion for a run.
 
 ## Stage Definition Of Done
 
@@ -16,7 +17,8 @@ Each stage must include:
 - benchmark command that can be rerun
 - saved raw result artifact such as JSON, CSV, logs, or metrics snapshot
 - summary table or plot where useful
-- writeup explaining hypothesis, setup, result, and interpretation
+- blogpost or writeup explaining hypothesis, setup, command, result, and
+  interpretation
 
 ## Required Metrics
 
@@ -98,18 +100,23 @@ What would this imply for deployment, scaling, reliability, or cost?
 ## Artifact Rules
 
 - Keep raw benchmark outputs.
+- Keep raw stdout/stderr logs when they explain startup, benchmark, or failure
+  behavior. Prefer names such as `log.out`, `stderr.log`, or
+  `vllm-startup.log` under the relevant experiment run folder.
 - Record model, backend version, hardware, and deployment mode.
 - Record component placement: where the benchmark runner, gateway, backend, and
   metrics stack ran.
 - Record the network path between benchmark runner, gateway, and backend,
   including Tailscale, loopback, private cloud networking, or Kubernetes
   service networking.
-- Record command lines used to run benchmarks.
+- Record command lines used to run benchmarks in the blogpost or experiment
+  writeup that interprets the raw artifacts. A separate command log in
+  `experiments/` is optional, not canonical.
 - For product-path measurements, run benchmarks against the public gateway
   endpoint rather than directly against the backend engine.
 - Label backend-only benchmark runs separately from gateway-path benchmark runs.
 - Keep benchmark-observed latency, gateway-observed latency, backend-reported
-  usage, and GPU/system metrics separate in raw artifacts and reports.
+  usage, and GPU/system metrics separate in artifact files and reports.
 - Label synthetic or mock-worker results clearly.
 - Do not compare mock-worker results as if they were real model-serving results.
 - Include cost notes for rented GPU experiments.
@@ -117,30 +124,47 @@ What would this imply for deployment, scaling, reliability, or cost?
 ## Experiment Directory Layout
 
 Store saved results in milestone experiment folders. Each folder should be able
-to explain what ran, how to rerun it, what artifacts were produced, and what the
-result means.
+to preserve the raw evidence for what ran. The blogpost or experiment writeup
+explains how to rerun it, what artifacts were produced, and what the result
+means.
 
 ```text
 experiments/
   001_vllm_gateway_baseline/
     README.md
-    commands.md
     configs/
-    raw/
+    1_latency/
+      vllm-latency-qwen3-8b-a100.json
+      log.out
+    2_throughput/
+      vllm-throughput-qwen3-8b-a100.json
+      log.out
+    3_direct_vllm_serve/
+      vllm-direct-serving-qwen3-8b-a100.json
+      log.out
+    4_gateway_serve/
+      vllm-gateway-serving-qwen3-8b-a100.json
+      gateway-metrics-after-qwen3-8b-a100.prom
+      prometheus-targets-after-qwen3-8b-a100.json
+      log.out
     plots/
-    report.md
 ```
 
-- `README.md`: short purpose, stage, backend, model, hardware, and status.
-- `commands.md`: exact commands and environment assumptions.
+- `README.md`: short purpose, stage, backend, model, hardware, status, and
+  pointer to the interpreting blogpost or writeup.
 - `configs/`: benchmark, gateway, backend, and deployment configuration used.
-- `raw/`: JSON, CSV, logs, metrics snapshots, and unmodified benchmark outputs.
+- numbered benchmark folders: JSON, CSV, logs, metrics snapshots,
+  stdout/stderr captures, and unmodified benchmark outputs for one measured
+  path.
 - `plots/`: generated figures and summary tables.
-- `report.md`: hypothesis, setup, workload, results, interpretation, and
-  production lessons.
+
+Optional files such as `commands.md` or `report.md` are allowed when they reduce
+friction during active work, but the public interpretation should live in the
+blogpost or explicit experiment writeup, not only in the experiment artifact
+folder.
 
 Synthetic, replayed, or mock-backed artifacts must be labeled in the folder
-README and report.
+README and the interpreting blogpost or writeup.
 
 ## Benchmark Tooling
 

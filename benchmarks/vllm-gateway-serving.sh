@@ -12,7 +12,7 @@ RANDOM_INPUT_LEN="${RANDOM_INPUT_LEN:-128}"
 RANDOM_OUTPUT_LEN="${RANDOM_OUTPUT_LEN:-64}"
 RANDOM_RANGE_RATIO="${RANDOM_RANGE_RATIO:-0.0}"
 TEMPERATURE="${TEMPERATURE:-0}"
-RESULT_DIR="${RESULT_DIR:-${REPO_ROOT}/experiments/001_vllm_gateway_baseline/raw}"
+RESULT_DIR="${RESULT_DIR:-${REPO_ROOT}/experiments/001_vllm_gateway_baseline/4_gateway_serve}"
 RESULT_FILENAME="${RESULT_FILENAME:-vllm-gateway-serving.json}"
 VLLM_PROJECT_DIR="${VLLM_PROJECT_DIR:-${REPO_ROOT}/deploy/vllm}"
 

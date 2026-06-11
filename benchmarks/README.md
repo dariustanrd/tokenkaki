@@ -1,7 +1,7 @@
 # Benchmarks
 
-Benchmark commands live here, while saved raw outputs live under milestone
-folders in `experiments/`.
+Benchmark commands live here, while saved outputs live under milestone folders
+in `experiments/`.
 
 ## Milestone 1 Gateway Serving Benchmark
 
@@ -13,7 +13,9 @@ Canonical runbooks:
 
 - Backend setup and direct vLLM smoke tests: `deploy/vllm/README.md`
 - Compose gateway and Prometheus stack: `deploy/compose/README.md`
-- Saved Milestone 1 command log: `experiments/001_vllm_gateway_baseline/commands.md`
+- Milestone interpretation: the relevant `Behind the API` blogpost or
+  experiment writeup
+- Raw evidence: milestone folders under `experiments/`
 
 The wrapper sets both `--backend openai-chat` and
 `--endpoint-type openai-chat`. vLLM `0.9.2` needs both options for the chat
@@ -39,8 +41,8 @@ Configuration:
 | `RANDOM_OUTPUT_LEN` | `64` | Target generated output length in tokens. This controls decode work. |
 | `RANDOM_RANGE_RATIO` | `0.0` | Variation around the requested input and output lengths. Record non-zero values because they change workload interpretation. |
 | `TEMPERATURE` | `0` | Sampling temperature sent through the OpenAI-compatible request. |
-| `RESULT_DIR` | `experiments/001_vllm_gateway_baseline/raw` | Directory where raw vLLM benchmark JSON is saved. Keep raw output unmodified. |
-| `RESULT_FILENAME` | `vllm-gateway-serving.json` | Raw benchmark JSON filename. Use descriptive names that include path and workload context. |
+| `RESULT_DIR` | `experiments/001_vllm_gateway_baseline/4_gateway_serve` | Directory where vLLM benchmark JSON is saved. Keep benchmark output unmodified. |
+| `RESULT_FILENAME` | `vllm-gateway-serving.json` | Benchmark JSON filename. Use descriptive names that include path and workload context. |
 | `VLLM_PROJECT_DIR` | `deploy/vllm` | Directory containing the pinned vLLM runtime. Override only when intentionally using a different benchmark runtime, and record that as provenance. |
 
 Fixed vLLM benchmark options:
@@ -81,12 +83,14 @@ RESULT_FILENAME=vllm-gateway-serving-smoke.json \
 The default output path is:
 
 ```text
-experiments/001_vllm_gateway_baseline/raw/vllm-gateway-serving.json
+experiments/001_vllm_gateway_baseline/4_gateway_serve/vllm-gateway-serving.json
 ```
 
-Keep result interpretation separate from the raw benchmark output. Gateway
-metrics, benchmark-observed latency, backend-reported token usage, and GPU
-metrics are related evidence streams, not interchangeable measurements.
+Keep result interpretation separate from the benchmark output. The blogpost
+or experiment writeup should include the command, environment, workload, result
+summary, and interpretation. Raw benchmark JSON, stdout/stderr logs, gateway
+metrics, backend-reported token usage, and GPU metrics should stay under
+`experiments/` as related evidence streams, not interchangeable measurements.
 
 Interpretation rules:
 
@@ -96,3 +100,5 @@ Interpretation rules:
 - `REQUEST_RATE`, input length, and output length define the workload. Compare
   runs only when these are intentionally the same or the difference is the
   experiment variable.
+- A `commands.md` file may exist during active work, but it is optional. Do not
+  rely on it as the only place where a published benchmark command is recorded.

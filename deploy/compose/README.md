@@ -83,6 +83,28 @@ curl http://127.0.0.1:8000/v1/chat/completions \
   }'
 ```
 
+Send one streaming request through the gateway:
+
+```bash
+curl -N http://127.0.0.1:8000/v1/chat/completions \
+  -H 'content-type: application/json' \
+  -H 'x-request-id: compose-stream-chat-001' \
+  -d '{
+    "model": "qwen3-8b",
+    "stream": true,
+    "messages": [
+      {"role": "user", "content": "Say hello in one short sentence."}
+    ],
+    "temperature": 0,
+    "max_tokens": 64,
+    "chat_template_kwargs": {"enable_thinking": false}
+  }'
+```
+
+The response should arrive as OpenAI-compatible server-sent event chunks ending
+with `data: [DONE]`. `curl -N` disables output buffering so chunks appear as
+they are received.
+
 On the Milestone 1 GPU host, the same request was validated through the Compose
 gateway published on alternate host port `18000` while vLLM was bound to
 `172.17.0.1:8001`.
@@ -108,8 +130,10 @@ tokenkaki_gateway_backend_tokens_total
   default `http://host.docker.internal:8001` assumes Docker can reach vLLM on
   the host gateway address.
 - Reusable benchmark wrapper usage is documented in `benchmarks/README.md`.
-- Exact saved Milestone 1 commands are recorded in
-  `experiments/001_vllm_gateway_baseline/commands.md`.
+- Published Milestone 1 benchmark commands and interpretation should live in the
+  relevant `Behind the API` blogpost or experiment writeup. Keep raw benchmark
+  outputs, Compose/gateway logs, metrics snapshots, and other evidence under
+  the matching `experiments/` milestone folder.
 - Benchmark results from this stack should still label vLLM as an external
   backend and preserve metric provenance separately from benchmark-observed
   latency.

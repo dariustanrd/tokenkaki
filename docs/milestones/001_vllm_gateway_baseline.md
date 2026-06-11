@@ -198,16 +198,24 @@ The first two steps are backend baselines, not gateway acceptance checks. They
 should not block validating the gateway path, but they should be saved for any
 Milestone 1 result that will be interpreted or published.
 
-Suggested raw artifact names:
+Suggested artifact names:
 
 ```text
-experiments/001_vllm_gateway_baseline/raw/
-  vllm-latency-qwen3-8b-a100.json
-  vllm-throughput-qwen3-8b-a100.json
-  vllm-direct-serving-qwen3-8b-a100.json
-  vllm-gateway-serving-qwen3-8b-a100.json
-  gateway-metrics-after-qwen3-8b-a100.prom
-  prometheus-targets-after-qwen3-8b-a100.json
+experiments/001_vllm_gateway_baseline/
+  1_latency/
+    vllm-latency-qwen3-8b-a100.json
+    log.out
+  2_throughput/
+    vllm-throughput-qwen3-8b-a100.json
+    log.out
+  3_direct_vllm_serve/
+    vllm-direct-serving-qwen3-8b-a100.json
+    log.out
+  4_gateway_serve/
+    vllm-gateway-serving-qwen3-8b-a100.json
+    gateway-metrics-after-qwen3-8b-a100.prom
+    prometheus-targets-after-qwen3-8b-a100.json
+    log.out
 ```
 
 The report should separate:

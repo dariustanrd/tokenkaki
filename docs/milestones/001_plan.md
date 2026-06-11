@@ -97,7 +97,7 @@ latency, vLLM engine throughput, direct vLLM serving, then gateway serving.
    - Added Compose run and verification docs.
    - Added `.dockerignore` for small Docker build context.
    - Added configurable published Compose ports through `TOKENKAKI_GATEWAY_PORT` and `TOKENKAKI_PROMETHEUS_PORT`.
-   - Added `benchmarks/vllm-gateway-serving.sh` using pinned `vllm bench serve` with OpenAI chat endpoint settings and raw JSON output under `experiments/001_vllm_gateway_baseline/raw/`.
+   - Added `benchmarks/vllm-gateway-serving.sh` using pinned `vllm bench serve` with OpenAI chat endpoint settings and JSON output under `experiments/001_vllm_gateway_baseline/4_gateway_serve/`.
    - Added `benchmarks/README.md` with benchmark wrapper usage, smoke command, and provenance notes.
    - Added the experiment artifact layout under `experiments/001_vllm_gateway_baseline/`.
    - Historical saved benchmark outputs were removed; the next run should
@@ -111,13 +111,13 @@ latency, vLLM engine throughput, direct vLLM serving, then gateway serving.
        serving run.
      - Interpret direct vLLM serving vs gateway serving under matched workload
        settings to estimate gateway overhead.
-   - Suggested current raw artifacts:
-     - `vllm-latency-qwen3-8b-a100.json`
-     - `vllm-throughput-qwen3-8b-a100.json`
-     - `vllm-direct-serving-qwen3-8b-a100.json`
-     - `vllm-gateway-serving-qwen3-8b-a100.json`
-     - `gateway-metrics-after-qwen3-8b-a100.prom`
-     - `prometheus-targets-after-qwen3-8b-a100.json`
+   - Suggested current artifacts:
+     - `1_latency/vllm-latency-qwen3-8b-a100.json`
+     - `2_throughput/vllm-throughput-qwen3-8b-a100.json`
+     - `3_direct_vllm_serve/vllm-direct-serving-qwen3-8b-a100.json`
+     - `4_gateway_serve/vllm-gateway-serving-qwen3-8b-a100.json`
+     - `4_gateway_serve/gateway-metrics-after-qwen3-8b-a100.prom`
+     - `4_gateway_serve/prometheus-targets-after-qwen3-8b-a100.json`
    - Verified with:
      - `docker compose -f deploy/compose/compose.yaml config`.
      - `TOKENKAKI_GATEWAY_PORT=18000 TOKENKAKI_PROMETHEUS_PORT=19090 docker compose -f deploy/compose/compose.yaml up --build -d`.
