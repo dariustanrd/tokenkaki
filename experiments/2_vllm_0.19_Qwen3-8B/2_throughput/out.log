@@ -1,4 +1,11 @@
-[25 Jun 2026] ~/Workspaces/tokenkaki/deploy/vllm ❯ CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=4 UV_TORCH_BACKEND=auto uv run vllm bench throughput --backend vllm --model Qwen/Qwen3-8B --dataset-name random --num-prompts 100 --random-input-len 128 --random-output-len 64 --random-range-ratio 0.0 --output-json ../../experiments/2_vllm_0.19_Qwen3-8B/2_throughput/vllm-throughput-qwen3-8b-a100.json
+[25 Jun 2026] ~/Workspaces/tokenkaki/deploy/vllm ❯  CUDA_DEVICE_ORDER=PCI_BUS_ID \
+                                                    CUDA_VISIBLE_DEVICES=4 \
+                                                    UV_TORCH_BACKEND=auto \
+                                                    uv run vllm bench throughput --backend vllm --model Qwen/Qwen3-8B \
+                                                        --dataset-name random --num-prompts 100 \
+                                                        --random-input-len 128 --random-output-len 64 \
+                                                        --random-range-ratio 0.0 \
+                                                        --output-json ../../experiments/2_vllm_0.19_Qwen3-8B/2_throughput/vllm-throughput-qwen3-8b-a100.json
 /home/darius/Workspaces/tokenkaki/deploy/vllm/.venv/lib/python3.12/site-packages/vllm/benchmarks/throughput.py:848: UserWarning: Both --prefix-len and --random-prefix-len are specified. The random version (--random-prefix-len) will be preferred in this run.
   validate_args(args)
 When dataset path is not set, it will default to random dataset
@@ -16,13 +23,20 @@ INFO 06-25 15:27:40 [vllm.py:790] Asynchronous scheduling is enabled.
 (EngineCore pid=3324280) INFO 06-25 15:27:56 [flash_attn.py:596] Using FlashAttention version 2
 (EngineCore pid=3324280) <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime module instead.
 (EngineCore pid=3324280) <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.nvrtc module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.nvrtc module instead.
-(EngineCore pid=3324280) Loading safetensors checkpoint shards:   0% Completed | 0/5 [00:00<?, ?it/s]
-(EngineCore pid=3324280) Loading safetensors checkpoint shards:  20% Completed | 1/5 [00:00<00:01,  2.38it/s]
-(EngineCore pid=3324280) Loading safetensors checkpoint shards:  40% Completed | 2/5 [00:00<00:01,  2.02it/s]
-(EngineCore pid=3324280) Loading safetensors checkpoint shards:  60% Completed | 3/5 [00:01<00:01,  1.97it/s]
-(EngineCore pid=3324280) Loading safetensors checkpoint shards:  80% Completed | 4/5 [00:01<00:00,  2.06it/s]
-(EngineCore pid=3324280) Loading safetensors checkpoint shards: 100% Completed | 5/5 [00:02<00:00,  2.55it/s]
-(EngineCore pid=3324280) Loading safetensors checkpoint shards: 100% Completed | 5/5 [00:02<00:00,  2.30it/s]
+(EngineCore pid=3324280) 
+Loading safetensors checkpoint shards:   0% Completed | 0/5 [00:00<?, ?it/s]
+(EngineCore pid=3324280) 
+Loading safetensors checkpoint shards:  20% Completed | 1/5 [00:00<00:01,  2.38it/s]
+(EngineCore pid=3324280) 
+Loading safetensors checkpoint shards:  40% Completed | 2/5 [00:00<00:01,  2.02it/s]
+(EngineCore pid=3324280) 
+Loading safetensors checkpoint shards:  60% Completed | 3/5 [00:01<00:01,  1.97it/s]
+(EngineCore pid=3324280) 
+Loading safetensors checkpoint shards:  80% Completed | 4/5 [00:01<00:00,  2.06it/s]
+(EngineCore pid=3324280) 
+Loading safetensors checkpoint shards: 100% Completed | 5/5 [00:02<00:00,  2.55it/s]
+(EngineCore pid=3324280) 
+Loading safetensors checkpoint shards: 100% Completed | 5/5 [00:02<00:00,  2.30it/s]
 (EngineCore pid=3324280) 
 (EngineCore pid=3324280) INFO 06-25 15:28:00 [default_loader.py:384] Loading weights took 2.21 seconds
 (EngineCore pid=3324280) INFO 06-25 15:28:00 [gpu_model_runner.py:4820] Model loading took 15.27 GiB memory and 4.402715 seconds
@@ -39,14 +53,54 @@ INFO 06-25 15:27:40 [vllm.py:790] Asynchronous scheduling is enabled.
 (EngineCore pid=3324280) INFO 06-25 15:28:07 [gpu_worker.py:470] In v0.19, CUDA graph memory profiling will be enabled by default (VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1), which more accurately accounts for CUDA graph memory during KV cache allocation. To try it now, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1 and increase --gpu-memory-utilization from 0.9000 to 0.9596 to maintain the same effective KV cache size.
 (EngineCore pid=3324280) INFO 06-25 15:28:07 [kv_cache_utils.py:1319] GPU KV cache size: 139,792 tokens
 (EngineCore pid=3324280) INFO 06-25 15:28:07 [kv_cache_utils.py:1324] Maximum concurrency for 40,960 tokens per request: 3.41x
-(EngineCore pid=3324280) Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   4%|▍         | 2/51 [00:00<00:02, 18.60it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   8%|▊         | 4/51 [00:00<00:02, 18.05it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  12%|█▏        | 6/51 [00:00<00:02, 16.88it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  16%|█▌        | 8/51 [00:00<00:02, 16.32it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  22%|██▏       | 11/51 [00:00<00:02, 17.27it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  25%|██▌       | 13/51 [00:00<00:02, 17.85it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  29%|██▉       | 15/51 [00:00<00:02, 17.73it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  35%|███▌      | 18/51 [00:00<00:01, 19.59it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  41%|████      | 21/51 [00:01<00:01, 21.11it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  47%|████▋     | 24/51 [00:01<00:01, 21.11it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  53%|█████▎    | 27/51 [00:01<00:01, 20.90it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  59%|█████▉    | 30/51 [00:01<00:00, 21.12it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  65%|██████▍   | 33/51 [00:01<00:00, 20.60it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  71%|███████   | 36/51 [00:01<00:00, 21.00it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  76%|███████▋  | 39/51 [00:01<00:00, 21.51it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  82%|████████▏ | 42/51 [00:02<00:00, 22.95it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  88%|████████▊ | 45/51 [00:02<00:00, 22.86it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  94%|█████████▍| 48/51 [00:02<00:00, 24.48it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:02<00:00, 21.80it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:02<00:00, 20.60it/s]
-(EngineCore pid=3324280) Capturing CUDA graphs (decode, FULL):   0%|          | 0/35 [00:00<?, ?it/s]Capturing CUDA graphs (decode, FULL):   9%|▊         | 3/35 [00:00<00:01, 22.47it/s]Capturing CUDA graphs (decode, FULL):  17%|█▋        | 6/35 [00:00<00:01, 22.57it/s]Capturing CUDA graphs (decode, FULL):  26%|██▌       | 9/35 [00:00<00:01, 23.71it/s]Capturing CUDA graphs (decode, FULL):  34%|███▍      | 12/35 [00:00<00:00, 24.40it/s]Capturing CUDA graphs (decode, FULL):  43%|████▎     | 15/35 [00:00<00:00, 25.33it/s]Capturing CUDA graphs (decode, FULL):  51%|█████▏    | 18/35 [00:00<00:00, 26.43it/s]Capturing CUDA graphs (decode, FULL):  60%|██████    | 21/35 [00:00<00:00, 26.16it/s]Capturing CUDA graphs (decode, FULL):  69%|██████▊   | 24/35 [00:00<00:00, 26.13it/s]Capturing CUDA graphs (decode, FULL):  77%|███████▋  | 27/35 [00:01<00:00, 26.62it/s]Capturing CUDA graphs (decode, FULL):  86%|████████▌ | 30/35 [00:01<00:00, 27.20it/s]Capturing CUDA graphs (decode, FULL):  97%|█████████▋| 34/35 [00:01<00:00, 28.39it/s]Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:01<00:00, 26.47it/s]
+(EngineCore pid=3324280) 
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   4%|▍         | 2/51 [00:00<00:02, 18.60it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   8%|▊         | 4/51 [00:00<00:02, 18.05it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  12%|█▏        | 6/51 [00:00<00:02, 16.88it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  16%|█▌        | 8/51 [00:00<00:02, 16.32it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  22%|██▏       | 11/51 [00:00<00:02, 17.27it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  25%|██▌       | 13/51 [00:00<00:02, 17.85it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  29%|██▉       | 15/51 [00:00<00:02, 17.73it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  35%|███▌      | 18/51 [00:00<00:01, 19.59it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  41%|████      | 21/51 [00:01<00:01, 21.11it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  47%|████▋     | 24/51 [00:01<00:01, 21.11it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  53%|█████▎    | 27/51 [00:01<00:01, 20.90it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  59%|█████▉    | 30/51 [00:01<00:00, 21.12it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  65%|██████▍   | 33/51 [00:01<00:00, 20.60it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  71%|███████   | 36/51 [00:01<00:00, 21.00it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  76%|███████▋  | 39/51 [00:01<00:00, 21.51it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  82%|████████▏ | 42/51 [00:02<00:00, 22.95it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  88%|████████▊ | 45/51 [00:02<00:00, 22.86it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  94%|█████████▍| 48/51 [00:02<00:00, 24.48it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:02<00:00, 21.80it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:02<00:00, 20.60it/s]
+(EngineCore pid=3324280) 
+Capturing CUDA graphs (decode, FULL):   0%|          | 0/35 [00:00<?, ?it/s]
+Capturing CUDA graphs (decode, FULL):   9%|▊         | 3/35 [00:00<00:01, 22.47it/s]
+Capturing CUDA graphs (decode, FULL):  17%|█▋        | 6/35 [00:00<00:01, 22.57it/s]
+Capturing CUDA graphs (decode, FULL):  26%|██▌       | 9/35 [00:00<00:01, 23.71it/s]
+Capturing CUDA graphs (decode, FULL):  34%|███▍      | 12/35 [00:00<00:00, 24.40it/s]
+Capturing CUDA graphs (decode, FULL):  43%|████▎     | 15/35 [00:00<00:00, 25.33it/s]
+Capturing CUDA graphs (decode, FULL):  51%|█████▏    | 18/35 [00:00<00:00, 26.43it/s]
+Capturing CUDA graphs (decode, FULL):  60%|██████    | 21/35 [00:00<00:00, 26.16it/s]
+Capturing CUDA graphs (decode, FULL):  69%|██████▊   | 24/35 [00:00<00:00, 26.13it/s]
+Capturing CUDA graphs (decode, FULL):  77%|███████▋  | 27/35 [00:01<00:00, 26.62it/s]
+Capturing CUDA graphs (decode, FULL):  86%|████████▌ | 30/35 [00:01<00:00, 27.20it/s]
+Capturing CUDA graphs (decode, FULL):  97%|█████████▋| 34/35 [00:01<00:00, 28.39it/s]
+Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:01<00:00, 26.47it/s]
 (EngineCore pid=3324280) INFO 06-25 15:28:12 [gpu_model_runner.py:6046] Graph capturing finished in 4 secs, took 2.44 GiB
 (EngineCore pid=3324280) INFO 06-25 15:28:12 [gpu_worker.py:597] CUDA graph pool memory: 2.44 GiB (actual), 2.35 GiB (estimated), difference: 0.09 GiB (3.6%).
 (EngineCore pid=3324280) INFO 06-25 15:28:12 [core.py:283] init engine (profile, create kv cache, warmup model) took 11.40 seconds
 (EngineCore pid=3324280) INFO 06-25 15:28:15 [vllm.py:790] Asynchronous scheduling is enabled.
-Rendering prompts:   0%|          | 0/100 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 100/100 [00:00<00:00, 1373.09it/s]
-Processed prompts:   0%|          | 0/100 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   1%|          | 1/100 [00:02<03:27,  2.10s/it, est. speed input: 60.97 toks/s, output: 30.49 toks/s]Processed prompts: 100%|██████████| 100/100 [00:02<00:00,  2.10s/it, est. speed input: 5969.86 toks/s, output: 2984.91 toks/s]Processed prompts: 100%|██████████| 100/100 [00:02<00:00, 46.64it/s, est. speed input: 5969.86 toks/s, output: 2984.91 toks/s]
+
+Rendering prompts:   0%|          | 0/100 [00:00<?, ?it/s]
+Rendering prompts: 100%|██████████| 100/100 [00:00<00:00, 1373.09it/s]
+
+Processed prompts:   0%|          | 0/100 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]
+Processed prompts:   1%|          | 1/100 [00:02<03:27,  2.10s/it, est. speed input: 60.97 toks/s, output: 30.49 toks/s]
+Processed prompts: 100%|██████████| 100/100 [00:02<00:00,  2.10s/it, est. speed input: 5969.86 toks/s, output: 2984.91 toks/s]
+Processed prompts: 100%|██████████| 100/100 [00:02<00:00, 46.64it/s, est. speed input: 5969.86 toks/s, output: 2984.91 toks/s]
 (EngineCore pid=3324280) INFO 06-25 15:28:17 [core.py:1210] Shutdown initiated (timeout=0)
 (EngineCore pid=3324280) INFO 06-25 15:28:17 [core.py:1233] Shutdown complete
 [rank0]:[W625 15:28:17.196524543 ProcessGroupNCCL.cpp:1553] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
