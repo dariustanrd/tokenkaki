@@ -75,7 +75,6 @@ cd "${VLLM_PROJECT_DIR}"
 
 uv run vllm bench serve \
   --backend openai-chat \
-  --endpoint-type openai-chat \
   --endpoint /v1/chat/completions \
   --base-url "${BASE_URL}" \
   --model "${TOKENIZER_MODEL}" \

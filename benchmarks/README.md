@@ -17,9 +17,9 @@ Canonical runbooks:
   experiment writeup
 - Raw evidence: milestone folders under `experiments/`
 
-The wrapper sets both `--backend openai-chat` and
-`--endpoint-type openai-chat` so the benchmark request shape matches the
-OpenAI-compatible chat endpoint explicitly.
+The wrapper sets `--backend openai-chat` and `--endpoint /v1/chat/completions`
+so the benchmark request shape matches the OpenAI-compatible chat endpoint
+explicitly.
 
 Default command:
 
@@ -59,7 +59,6 @@ Fixed vLLM benchmark options:
 | vLLM option | Value |
 | --- | --- |
 | `--backend` | `openai-chat` |
-| `--endpoint-type` | `openai-chat` |
 | `--endpoint` | `/v1/chat/completions` |
 | `--dataset-name` | `random` |
 | `--save-result` | enabled |
