@@ -6,7 +6,7 @@ in `experiments/`.
 ## Milestone 1 Serving Benchmarks
 
 Use `./benchmarks/vllm-serving-bench.sh` to run `vllm bench serve` from the
-pinned `deploy/vllm/` runtime environment against either the direct vLLM
+dedicated `deploy/vllm/` runtime environment against either the direct vLLM
 OpenAI chat endpoint or the gateway OpenAI chat endpoint.
 
 Canonical runbooks:
@@ -18,9 +18,8 @@ Canonical runbooks:
 - Raw evidence: milestone folders under `experiments/`
 
 The wrapper sets both `--backend openai-chat` and
-`--endpoint-type openai-chat`. vLLM `0.9.2` needs both options for the chat
-completion request shape; setting only the backend leaves the endpoint type at
-the CLI default.
+`--endpoint-type openai-chat` so the benchmark request shape matches the
+OpenAI-compatible chat endpoint explicitly.
 
 Default command:
 
@@ -49,6 +48,7 @@ Configuration:
 | `RANDOM_OUTPUT_LEN` | `64` | Target generated output length in tokens. This controls decode work. |
 | `RANDOM_RANGE_RATIO` | `0.0` | Variation around the requested input and output lengths. Record non-zero values because they change workload interpretation. |
 | `TEMPERATURE` | `0` | Sampling temperature sent through the OpenAI-compatible request. |
+| `UV_TORCH_BACKEND` | `auto` | PyTorch backend selector exported before `uv run`. Keep this aligned with `deploy/vllm/README.md` so an implicit sync does not drift from the runtime setup. |
 | `EXPERIMENT_ROOT` | `experiments/001_vllm_gateway_baseline` | Root experiment folder used to derive target-specific default result directories. Relative paths are resolved from the repository root. Override this for a newer experiment folder, such as `experiments/1_vllm_baseline_Qwen3-8B`. |
 | `RESULT_DIR` | target-specific | Directory where vLLM benchmark JSON is saved. Relative paths are resolved from the repository root. Defaults to `experiments/001_vllm_gateway_baseline/3_direct_vllm_serve` for direct vLLM and `experiments/001_vllm_gateway_baseline/4_gateway_serve` for gateway. |
 | `RESULT_FILENAME` | target-specific | Benchmark JSON filename. Defaults to `vllm-direct-serving.json` for direct vLLM and `vllm-gateway-serving.json` for gateway. |

@@ -32,7 +32,7 @@ From this folder, create or refresh the vLLM environment:
 
 ```bash
 cd deploy/vllm
-UV_TORCH_BACKEND=cu118 uv sync --frozen
+UV_TORCH_BACKEND=auto uv sync
 uv run vllm serve --help
 cd ../..
 ```
@@ -40,12 +40,17 @@ cd ../..
 Why: the gateway can stay lightweight and testable while the GPU host still has
 a repeatable backend runtime.
 
-`UV_TORCH_BACKEND=cu118` is intentional. This GPU host has A100 GPUs on an
-NVIDIA 535.x driver, so the runtime uses a newer vLLM CUDA 11.8 prebuilt wheel
-instead of resolving CUDA 12.6/12.8/12.9 wheels that require newer drivers or
-may force a source build. `deploy/vllm/pyproject.toml` also pins the PyTorch
-family packages to CUDA 11.8 local-version wheels so the vLLM wheel and PyTorch
-wheel family stay aligned.
+`UV_TORCH_BACKEND=auto` lets uv choose the PyTorch wheel index from the local GPU
+driver and accelerator during sync. This keeps the vLLM runtime on the newest
+known-good release for the current CUDA 12 driver constraints without
+hard-coding a CUDA wheel family in `pyproject.toml`.
+
+The helper script runs the same sync command and prints the resolved vLLM,
+PyTorch, and CUDA runtime versions:
+
+```bash
+./deploy/vllm/sync-runtime.sh
+```
 
 Create a local environment file from the example:
 
@@ -88,30 +93,31 @@ nvidia-smi
 uv --version
 cd deploy/vllm
 uv run python --version
-uv run python -c "import vllm; print(vllm.__version__)"
+uv run python -c "import torch, vllm; print(vllm.__version__); print(torch.__version__, torch.version.cuda)"
 ```
 
-The dependency range in `deploy/vllm/pyproject.toml` plus `uv.lock` is a
-starting point, not a benchmark claim. If CUDA, PyTorch, or vLLM compatibility
-requires a different version, update those files and record the reason in the
-experiment artifact.
+The `deploy/vllm/pyproject.toml` vLLM pin plus `uv.lock` records the current
+runtime target. If CUDA, PyTorch, or vLLM compatibility requires a different
+version, update those files and record the reason in the experiment artifact.
 
 Current runtime target:
 
 ```text
-vLLM: 0.9.2+cu118 prebuilt wheel
-PyTorch: 2.7.0+cu118
-TorchVision: 0.22.0+cu118
-TorchAudio: 2.7.0+cu118
-Transformers: >=4.51.1,<4.54
+vLLM: 0.19.1
+PyTorch backend: selected by uv from the local GPU driver and accelerator
+Sync command: `UV_TORCH_BACKEND=auto uv sync`
 ```
 
-When checking or refreshing the lockfile on this GPU host, keep the same backend
-selection:
+`vllm 0.20.0` and newer currently require a PyTorch line that resolves to CUDA
+13 on this host, which fails against the CUDA 12.2-era NVIDIA driver. The
+`0.19.1` pin is the newest tested local runtime that keeps the environment on a
+CUDA 12 PyTorch stack.
+
+When refreshing this GPU host's environment, keep the same backend selection:
 
 ```bash
 cd deploy/vllm
-UV_TORCH_BACKEND=cu118 uv lock
+UV_TORCH_BACKEND=auto uv sync
 ```
 
 ## Start vLLM
@@ -123,7 +129,7 @@ UV_TORCH_BACKEND=cu118 uv lock
 The script runs `uv run vllm serve` from this folder's dedicated project. If you
 need to bypass uv for debugging, set `VLLM_RUNNER` explicitly, for example
 `VLLM_RUNNER=""`, but do not use that for saved benchmark evidence unless it is
-recorded. The script exports `UV_TORCH_BACKEND=cu118` by default if it is not
+recorded. The script exports `UV_TORCH_BACKEND=auto` by default if it is not
 already set.
 
 By default this binds to `127.0.0.1:8001`. Prefer loopback for Milestone 1

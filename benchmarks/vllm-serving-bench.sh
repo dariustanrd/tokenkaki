@@ -15,8 +15,10 @@ RANDOM_INPUT_LEN="${RANDOM_INPUT_LEN:-128}"
 RANDOM_OUTPUT_LEN="${RANDOM_OUTPUT_LEN:-64}"
 RANDOM_RANGE_RATIO="${RANDOM_RANGE_RATIO:-0.0}"
 TEMPERATURE="${TEMPERATURE:-0}"
+UV_TORCH_BACKEND="${UV_TORCH_BACKEND:-auto}"
 VLLM_PROJECT_DIR="${VLLM_PROJECT_DIR:-${REPO_ROOT}/deploy/vllm}"
 EXPERIMENT_ROOT="${EXPERIMENT_ROOT:-${REPO_ROOT}/experiments/001_vllm_gateway_baseline}"
+export UV_TORCH_BACKEND
 
 case "${EXPERIMENT_ROOT}" in
   /*) ;;
@@ -66,6 +68,7 @@ echo "  experiment root: ${EXPERIMENT_ROOT}"
 echo "  num prompts: ${NUM_PROMPTS}"
 echo "  request rate: ${REQUEST_RATE}"
 echo "  random input/output tokens: ${RANDOM_INPUT_LEN}/${RANDOM_OUTPUT_LEN}"
+echo "  uv torch backend: ${UV_TORCH_BACKEND}"
 echo "  result: ${RESULT_DIR}/${RESULT_FILENAME}"
 
 cd "${VLLM_PROJECT_DIR}"
@@ -98,4 +101,5 @@ uv run vllm bench serve \
   served_model_name="${SERVED_MODEL_NAME}" \
   tokenizer_model="${TOKENIZER_MODEL}" \
   experiment_root="${EXPERIMENT_ROOT}" \
+  uv_torch_backend="${UV_TORCH_BACKEND}" \
   benchmark_runner="same-host"
