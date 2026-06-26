@@ -14,7 +14,7 @@ Starting external vLLM OpenAI server
 ====== Terminal 2 ======
 [12 Jun 12:23 AM] ~/Workspaces/tokenkaki ❯ BENCHMARK_TARGET=vllm \
 VLLM_BASE_URL=http://172.17.0.1:8001 \
-EXPERIMENT_ROOT=experiments/1_vllm_baseline_Qwen3-8B \
+EXPERIMENT_ROOT=experiments/archive/1_vllm__0.9.2_baseline_Qwen3-8B \
 NUM_PROMPTS=100 \
 REQUEST_RATE=5 \
 RANDOM_INPUT_LEN=128 \
@@ -29,14 +29,14 @@ Running vLLM serving benchmark
   public model: qwen3-8b
   backend model: Qwen/Qwen3-8B
   tokenizer model: Qwen/Qwen3-8B
-  experiment root: /home/darius/Workspaces/tokenkaki/experiments/1_vllm_baseline_Qwen3-8B
+  experiment root: /home/darius/Workspaces/tokenkaki/experiments/archive/1_vllm__0.9.2_baseline_Qwen3-8B
   num prompts: 100
   request rate: 5
   random input/output tokens: 128/64
-  result: /home/darius/Workspaces/tokenkaki/experiments/1_vllm_baseline_Qwen3-8B/3_direct_vllm_serve/vllm-direct-serving-qwen3-8b-a100.json
+  result: /home/darius/Workspaces/tokenkaki/experiments/archive/1_vllm__0.9.2_baseline_Qwen3-8B/3_direct_vllm_serve/vllm-direct-serving-qwen3-8b-a100.json
 INFO 06-12 00:23:39 [__init__.py:244] Automatically detected platform cuda.
 WARNING 06-12 00:23:39 [cuda.py:519] Detected different devices in the system: NVIDIA A100-SXM4-40GB, NVIDIA A100-SXM4-40GB, NVIDIA A100-SXM4-40GB, NVIDIA DGX Display, NVIDIA A100-SXM4-40GB. Please make sure to set `CUDA_DEVICE_ORDER=PCI_BUS_ID` to avoid unexpected behavior.
-Namespace(subparser='bench', bench_type='serve', dispatch_function=<function BenchmarkServingSubcommand.cmd at 0x7f305b23d6c0>, seed=0, num_prompts=100, dataset_name='random', dataset_path=None, custom_output_len=256, custom_skip_chat_template=False, sonnet_input_len=550, sonnet_output_len=150, sonnet_prefix_len=200, sharegpt_output_len=None, random_input_len=128, random_output_len=64, random_range_ratio=0.0, random_prefix_len=0, hf_subset=None, hf_split=None, hf_output_len=None, endpoint_type='openai-chat', label=None, backend='openai-chat', base_url='http://172.17.0.1:8001', host='127.0.0.1', port=8000, endpoint='/v1/chat/completions', max_concurrency=None, model='Qwen/Qwen3-8B', tokenizer=None, use_beam_search=False, logprobs=None, request_rate=5.0, burstiness=1.0, trust_remote_code=False, disable_tqdm=False, profile=False, save_result=True, save_detailed=False, append_result=False, metadata=['benchmark_target=vllm', 'benchmark_path=direct_vllm', 'base_url=http://172.17.0.1:8001', 'gateway_base_url=http://127.0.0.1:8000', 'vllm_base_url=http://172.17.0.1:8001', 'public_model=qwen3-8b', 'backend_model=Qwen/Qwen3-8B', 'served_model_name=Qwen/Qwen3-8B', 'tokenizer_model=Qwen/Qwen3-8B', 'experiment_root=/home/darius/Workspaces/tokenkaki/experiments/1_vllm_baseline_Qwen3-8B', 'benchmark_runner=same-host'], result_dir='/home/darius/Workspaces/tokenkaki/experiments/1_vllm_baseline_Qwen3-8B/3_direct_vllm_serve', result_filename='vllm-direct-serving-qwen3-8b-a100.json', ignore_eos=False, percentile_metrics='ttft,tpot,itl', metric_percentiles='99', goodput=None, top_p=None, top_k=None, min_p=None, temperature=0.0, tokenizer_mode='auto', served_model_name='Qwen/Qwen3-8B', lora_modules=None, ramp_up_strategy=None, ramp_up_start_rps=None, ramp_up_end_rps=None)
+Namespace(subparser='bench', bench_type='serve', dispatch_function=<function BenchmarkServingSubcommand.cmd at 0x7f305b23d6c0>, seed=0, num_prompts=100, dataset_name='random', dataset_path=None, custom_output_len=256, custom_skip_chat_template=False, sonnet_input_len=550, sonnet_output_len=150, sonnet_prefix_len=200, sharegpt_output_len=None, random_input_len=128, random_output_len=64, random_range_ratio=0.0, random_prefix_len=0, hf_subset=None, hf_split=None, hf_output_len=None, endpoint_type='openai-chat', label=None, backend='openai-chat', base_url='http://172.17.0.1:8001', host='127.0.0.1', port=8000, endpoint='/v1/chat/completions', max_concurrency=None, model='Qwen/Qwen3-8B', tokenizer=None, use_beam_search=False, logprobs=None, request_rate=5.0, burstiness=1.0, trust_remote_code=False, disable_tqdm=False, profile=False, save_result=True, save_detailed=False, append_result=False, metadata=['benchmark_target=vllm', 'benchmark_path=direct_vllm', 'base_url=http://172.17.0.1:8001', 'gateway_base_url=http://127.0.0.1:8000', 'vllm_base_url=http://172.17.0.1:8001', 'public_model=qwen3-8b', 'backend_model=Qwen/Qwen3-8B', 'served_model_name=Qwen/Qwen3-8B', 'tokenizer_model=Qwen/Qwen3-8B', 'experiment_root=/home/darius/Workspaces/tokenkaki/experiments/archive/1_vllm__0.9.2_baseline_Qwen3-8B', 'benchmark_runner=same-host'], result_dir='/home/darius/Workspaces/tokenkaki/experiments/archive/1_vllm__0.9.2_baseline_Qwen3-8B/3_direct_vllm_serve', result_filename='vllm-direct-serving-qwen3-8b-a100.json', ignore_eos=False, percentile_metrics='ttft,tpot,itl', metric_percentiles='99', goodput=None, top_p=None, top_k=None, min_p=None, temperature=0.0, tokenizer_mode='auto', served_model_name='Qwen/Qwen3-8B', lora_modules=None, ramp_up_strategy=None, ramp_up_start_rps=None, ramp_up_end_rps=None)
 INFO 06-12 00:23:43 [datasets.py:355] Sampling input_len from [128, 128] and output_len from [64, 64]
 Starting initial single prompt test run...
 Initial test run completed. Starting main benchmark run...

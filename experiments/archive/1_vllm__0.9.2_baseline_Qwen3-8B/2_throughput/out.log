@@ -9,7 +9,7 @@ uv run vllm bench throughput \
   --input-len 128 \
   --output-len 64 \
   --random-range-ratio 0.0 \
-  --output-json ../../experiments/1_vllm_baseline_Qwen3-8B/2_throughput/vllm-throughput-qwen3-8b-a100.json
+  --output-json ../../experiments/archive/1_vllm__0.9.2_baseline_Qwen3-8B/2_throughput/vllm-throughput-qwen3-8b-a100.json
 INFO 06-12 00:05:12 [__init__.py:244] Automatically detected platform cuda.
 When dataset path is not set, it will default to random dataset
 INFO 06-12 00:05:15 [datasets.py:355] Sampling input_len from [128, 128] and output_len from [64, 64]

@@ -496,7 +496,7 @@ uv run vllm bench latency \
   --output-len 64 \
   --num-iters-warmup 10 \
   --num-iters 30 \
-  --output-json ../../experiments/2_vllm_0.19_Qwen3-8B/1_latency/vllm-latency-qwen3-8b-a100.json
+  --output-json ../../experiments/1_vllm_v0.19.1_Qwen3-8B/1_latency/vllm-latency-qwen3-8b-a100.json
 ```
 
 
@@ -516,7 +516,7 @@ uv run vllm bench throughput \
   --random-input-len 128 \
   --random-output-len 64 \
   --random-range-ratio 0.0 \
-  --output-json ../../experiments/2_vllm_0.19_Qwen3-8B/2_throughput/vllm-throughput-qwen3-8b-a100.json
+  --output-json ../../experiments/1_vllm_v0.19.1_Qwen3-8B/2_throughput/vllm-throughput-qwen3-8b-a100.json
 ```
 
 benchmark 3: direct OpenAI-compatible serving
@@ -524,7 +524,7 @@ benchmark 3: direct OpenAI-compatible serving
 ```bash
 BENCHMARK_TARGET=vllm \
 VLLM_BASE_URL=http://172.17.0.1:8001 \
-EXPERIMENT_ROOT=experiments/2_vllm_0.19_Qwen3-8B \
+EXPERIMENT_ROOT=experiments/1_vllm_v0.19.1_Qwen3-8B \
 NUM_PROMPTS=100 \
 REQUEST_RATE=5 \
 RANDOM_INPUT_LEN=128 \
@@ -560,15 +560,15 @@ direct serving, 100 prompts at 5 RPS:
 The direct serving result above comes from:
 
 ```text
-experiments/2_vllm_0.19_Qwen3-8B/3_direct_vllm_serve/out.log
-experiments/2_vllm_0.19_Qwen3-8B/3_direct_vllm_serve/vllm-direct-serving-qwen3-8b-a100.json
+experiments/1_vllm_v0.19.1_Qwen3-8B/3_direct_vllm_serve/out.log
+experiments/1_vllm_v0.19.1_Qwen3-8B/3_direct_vllm_serve/vllm-direct-serving-qwen3-8b-a100.json
 ```
 
 I also ran a `--save-detailed` diagnostic immediately after the summary run:
 
 ```text
-experiments/2_vllm_0.19_Qwen3-8B/3_direct_vllm_serve/out-detailed.log
-experiments/2_vllm_0.19_Qwen3-8B/3_direct_vllm_serve/vllm-direct-serving-qwen3-8b-a100-detailed.json
+experiments/1_vllm_v0.19.1_Qwen3-8B/3_direct_vllm_serve/out-detailed.log
+experiments/1_vllm_v0.19.1_Qwen3-8B/3_direct_vllm_serve/vllm-direct-serving-qwen3-8b-a100-detailed.json
 ```
 
 these 3 benchmarks becomes the baseline for future experiments, because they are the raw measurements for a static workload on this hardware directly at the vLLM level.

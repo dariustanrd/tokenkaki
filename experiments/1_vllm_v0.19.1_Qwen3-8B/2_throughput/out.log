@@ -5,7 +5,7 @@
                                                         --dataset-name random --num-prompts 100 \
                                                         --random-input-len 128 --random-output-len 64 \
                                                         --random-range-ratio 0.0 \
-                                                        --output-json ../../experiments/2_vllm_0.19_Qwen3-8B/2_throughput/vllm-throughput-qwen3-8b-a100.json
+                                                        --output-json ../../experiments/1_vllm_v0.19.1_Qwen3-8B/2_throughput/vllm-throughput-qwen3-8b-a100.json
 /home/darius/Workspaces/tokenkaki/deploy/vllm/.venv/lib/python3.12/site-packages/vllm/benchmarks/throughput.py:848: UserWarning: Both --prefix-len and --random-prefix-len are specified. The random version (--random-prefix-len) will be preferred in this run.
   validate_args(args)
 When dataset path is not set, it will default to random dataset

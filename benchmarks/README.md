@@ -49,7 +49,7 @@ Configuration:
 | `RANDOM_RANGE_RATIO` | `0.0` | Variation around the requested input and output lengths. Record non-zero values because they change workload interpretation. |
 | `TEMPERATURE` | `0` | Sampling temperature sent through the OpenAI-compatible request. |
 | `UV_TORCH_BACKEND` | `auto` | PyTorch backend selector exported before `uv run`. Keep this aligned with `deploy/vllm/README.md` so an implicit sync does not drift from the runtime setup. |
-| `EXPERIMENT_ROOT` | `experiments/001_vllm_gateway_baseline` | Root experiment folder used to derive target-specific default result directories. Relative paths are resolved from the repository root. Override this for a newer experiment folder, such as `experiments/1_vllm_baseline_Qwen3-8B`. |
+| `EXPERIMENT_ROOT` | `experiments/001_vllm_gateway_baseline` | Root experiment folder used to derive target-specific default result directories. Relative paths are resolved from the repository root. Override this for a newer experiment folder, such as `experiments/1_vllm_v0.19.1_Qwen3-8B`. |
 | `RESULT_DIR` | target-specific | Directory where vLLM benchmark JSON is saved. Relative paths are resolved from the repository root. Defaults to `experiments/001_vllm_gateway_baseline/3_direct_vllm_serve` for direct vLLM and `experiments/001_vllm_gateway_baseline/4_gateway_serve` for gateway. |
 | `RESULT_FILENAME` | target-specific | Benchmark JSON filename. Defaults to `vllm-direct-serving.json` for direct vLLM and `vllm-gateway-serving.json` for gateway. |
 | `VLLM_PROJECT_DIR` | `deploy/vllm` | Directory containing the pinned vLLM runtime. Override only when intentionally using a different benchmark runtime, and record that as provenance. |
@@ -69,7 +69,7 @@ Direct vLLM serving baseline:
 ```bash
 BENCHMARK_TARGET=vllm \
 VLLM_BASE_URL=http://172.17.0.1:8001 \
-EXPERIMENT_ROOT=experiments/1_vllm_baseline_Qwen3-8B \
+EXPERIMENT_ROOT=experiments/1_vllm_v0.19.1_Qwen3-8B \
 NUM_PROMPTS=100 \
 REQUEST_RATE=5 \
 RANDOM_INPUT_LEN=128 \
@@ -82,7 +82,7 @@ Gateway serving benchmark:
 
 ```bash
 GATEWAY_BASE_URL=http://127.0.0.1:18000 \
-EXPERIMENT_ROOT=experiments/1_vllm_baseline_Qwen3-8B \
+EXPERIMENT_ROOT=experiments/1_vllm_v0.19.1_Qwen3-8B \
 NUM_PROMPTS=10 \
 REQUEST_RATE=1 \
 RANDOM_INPUT_LEN=128 \
@@ -107,9 +107,9 @@ Gateway timing summary from a saved metrics snapshot:
 
 ```bash
 python3 benchmarks/gateway-timing-summary.py \
-  --benchmark-json experiments/2_vllm_0.19_Qwen3-8B/5_gateway_serve_gateway-timed/vllm-gateway-serving-qwen3-8b-a100-gateway-timed.json \
-  --metrics-prom experiments/2_vllm_0.19_Qwen3-8B/5_gateway_serve_gateway-timed/gateway-metrics-after-benchmark.prom \
-  --output experiments/2_vllm_0.19_Qwen3-8B/5_gateway_serve_gateway-timed/gateway-timing-summary.json
+  --benchmark-json experiments/1_vllm_v0.19.1_Qwen3-8B/5_gateway_serve_gateway-timed/vllm-gateway-serving-qwen3-8b-a100-gateway-timed.json \
+  --metrics-prom experiments/1_vllm_v0.19.1_Qwen3-8B/5_gateway_serve_gateway-timed/gateway-metrics-after-benchmark.prom \
+  --output experiments/1_vllm_v0.19.1_Qwen3-8B/5_gateway_serve_gateway-timed/gateway-timing-summary.json
 ```
 
 The default output path is:

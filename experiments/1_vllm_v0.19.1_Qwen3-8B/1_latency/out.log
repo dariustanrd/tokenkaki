@@ -4,7 +4,7 @@
                                                     uv run vllm bench latency --model Qwen/Qwen3-8B \
                                                         --batch-size 1 --input-len 128 --output-len 64 \
                                                         --num-iters-warmup 10 --num-iters 30 \
-                                                        --output-json ../../experiments/2_vllm_0.19_Qwen3-8B/1_latency/vllm-latency-qwen3-8b-a100.json
+                                                        --output-json ../../experiments/1_vllm_v0.19.1_Qwen3-8B/1_latency/vllm-latency-qwen3-8b-a100.json
 INFO 06-25 14:50:35 [utils.py:233] non-default args: {'enable_prefix_caching': False, 'enable_lora': None, 'reasoning_parser_plugin': '', 'model': 'Qwen/Qwen3-8B'}
 INFO 06-25 14:50:37 [model.py:549] Resolved architecture: Qwen3ForCausalLM
 INFO 06-25 14:50:37 [model.py:1678] Using max model len 40960

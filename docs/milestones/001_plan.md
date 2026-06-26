@@ -14,10 +14,12 @@ Current packaged gateway config uses public alias `qwen3-8b` backed by
 `qwen3-0.6b` are historical provenance for the first validated run, not the
 current default.
 
-The old Milestone 1 experiment results have been removed. The next Milestone 1
-experiment should regenerate evidence for the current `qwen3-8b` default using
-the benchmark ladder defined in `001_vllm_gateway_baseline.md`: vLLM engine
-latency, vLLM engine throughput, direct vLLM serving, then gateway serving.
+Milestone 1 engineering acceptance evidence has been regenerated for the
+current `qwen3-8b` default under
+`experiments/1_vllm_v0.19.1_Qwen3-8B/`. The saved ladder covers vLLM engine
+latency, vLLM engine throughput, direct vLLM serving, gateway serving, gateway
+metrics snapshots, Prometheus target snapshots, and gateway timing summaries.
+The public writeup is tracked separately from this execution plan.
 
 ## Tracer-Bullet Slices
 1. **Runnable Gateway Skeleton** - Completed
@@ -73,23 +75,23 @@ latency, vLLM engine throughput, direct vLLM serving, then gateway serving.
    - Why: streaming is an early serving-path requirement, not a later enhancement.
    - Implication: TTFT/TPOT remain benchmark-observed metrics; gateway metrics track stream lifecycle. Truncated Qwen3 thinking outputs are backend/model behavior, so the gateway should not silently strip `<think>` content, raise `max_tokens`, or fabricate an answer.
 
-6. **Fail-Loud Error And Metrics Contract** - Partial
-   - Completed metrics increment:
+6. **Fail-Loud Error And Metrics Contract** - Completed
+  - Completed metrics scope:
      - Emit Prometheus chat completion request counts labeled by status, selected backend, routing policy, and error class.
      - Emit Prometheus backend error counts labeled by selected backend, routing policy, error class, timeout class, and backend HTTP status when available.
      - Emit Prometheus stream duration histograms for streaming requests labeled by selected backend, routing policy, stream status, and error class.
      - Emit Prometheus backend-reported token counters for prompt, completion, and total tokens when non-streaming responses include OpenAI-compatible `usage`.
      - Preserved existing gateway behavior for unknown/disabled models, backend HTTP responses, timeout envelopes, and connection failure envelopes.
    - Verified with: `uv run pytest tests/test_config_registry.py tests/test_gateway_chat.py tests/test_gateway_skeleton.py`, `uv run pytest`, and a manual non-streaming request through the gateway showing chat completion and token metrics in `/metrics`.
-   - Deferred/skipped for a later Slice 6 increment:
+  - Accepted follow-up items outside Milestone 1 closure:
      - Do not yet split unknown model vs disabled model error envelopes.
      - Do not yet remap backend HTTP 4xx/5xx responses into gateway-owned error envelopes.
      - Do not yet add Qwen3 low-`max_tokens` thinking-mode warning or validation.
      - Do not yet add per-request token histograms; use cumulative Prometheus counters and add per-request values later through structured logs or tracing when needed.
-   - Why: Milestone 1 should preserve evidence for learning, and metrics are the least invasive first step.
+  - Why: Milestone 1 should preserve evidence for learning, and metrics are the least invasive first step.
    - Implication: no auth, quotas, smart retries, failover, or broader error-policy changes are added yet.
 
-7. **Compose, Benchmark, And Experiment Artifact Path** - Completed infrastructure, benchmark rerun pending
+7. **Compose, Benchmark, And Experiment Artifact Path** - Completed
    - Added `deploy/compose/` for gateway and Prometheus scraping only.
    - vLLM remains a separately managed external GPU-backed server for Milestone 1.
    - Added Compose-specific gateway config pointing from the gateway container to host vLLM through `http://host.docker.internal:8001`.
@@ -100,24 +102,19 @@ latency, vLLM engine throughput, direct vLLM serving, then gateway serving.
    - Added `benchmarks/vllm-serving-bench.sh` using pinned `vllm bench serve` with OpenAI chat endpoint settings and JSON output under `experiments/001_vllm_gateway_baseline/4_gateway_serve/`.
    - Added `benchmarks/README.md` with benchmark wrapper usage, smoke command, and provenance notes.
    - Added the experiment artifact layout under `experiments/001_vllm_gateway_baseline/`.
-   - Historical saved benchmark outputs were removed; the next run should
-     repopulate this folder with current `qwen3-8b` evidence.
-   - Updated benchmark plan:
-     - Run `vllm bench latency` for the selected model/GPU/backend config.
-     - Run `vllm bench throughput` for offline backend engine capacity.
-     - Run `vllm bench serve` directly against the external vLLM server.
-     - Run `vllm bench serve` against `tokenkaki.gateway`.
-     - Save gateway metrics and Prometheus target snapshots after the gateway
-       serving run.
-     - Interpret direct vLLM serving vs gateway serving under matched workload
-       settings to estimate gateway overhead.
-   - Suggested current artifacts:
+   - Regenerated Qwen3-8B benchmark evidence under
+     `experiments/1_vllm_v0.19.1_Qwen3-8B/` with the Milestone 1 ladder:
      - `1_latency/vllm-latency-qwen3-8b-a100.json`
      - `2_throughput/vllm-throughput-qwen3-8b-a100.json`
      - `3_direct_vllm_serve/vllm-direct-serving-qwen3-8b-a100.json`
+     - `3_direct_vllm_serve/vllm-direct-serving-qwen3-8b-a100-detailed.json`
      - `4_gateway_serve/vllm-gateway-serving-qwen3-8b-a100.json`
-     - `4_gateway_serve/gateway-metrics-after-qwen3-8b-a100.prom`
-     - `4_gateway_serve/prometheus-targets-after-qwen3-8b-a100.json`
+     - `4_gateway_serve/vllm-gateway-serving-qwen3-8b-a100-detailed.json`
+     - `5_gateway_serve_gateway-timed/gateway-metrics-after-benchmark.prom`
+     - `5_gateway_serve_gateway-timed/prometheus-up-after-benchmark.json`
+     - `5_gateway_serve_gateway-timed/gateway-timing-summary.json`
+     - `6_gateway_serve_pooled-client/vllm-gateway-serving-qwen3-8b-a100-pooled-client.json`
+     - `6_gateway_serve_pooled-client/gateway-timing-summary.json`
    - Verified with:
      - `docker compose -f deploy/compose/compose.yaml config`.
      - `TOKENKAKI_GATEWAY_PORT=18000 TOKENKAKI_PROMETHEUS_PORT=19090 docker compose -f deploy/compose/compose.yaml up --build -d`.
@@ -128,8 +125,12 @@ latency, vLLM engine throughput, direct vLLM serving, then gateway serving.
      - Final acceptance checks: `uv run pytest`, direct external vLLM `/v1/models`, Compose gateway non-streaming chat, Compose gateway streaming chat, and Prometheus target health.
      - A Compose chat request while vLLM was bound to host loopback produced the expected gateway `502` and backend connection failure metrics, confirming the failure is visible.
      - Restarted external vLLM with `VLLM_HOST=172.17.0.1 ./deploy/vllm/run-openai-server.sh`, then verified a successful non-streaming `/v1/chat/completions` request through the Compose gateway on `http://127.0.0.1:18000`.
-     - Earlier historical run verified benchmark command shape and Compose
-       gateway serving with `qwen3-0.6b`; those artifacts are no longer present.
+     - `vllm bench latency` saved engine latency output for Qwen3-8B on one A100.
+     - `vllm bench throughput` saved offline engine throughput output for Qwen3-8B on one A100.
+     - `vllm bench serve` completed direct vLLM serving runs with 100/100 successful requests.
+     - `vllm bench serve` completed gateway serving runs with 100/100 successful requests.
+     - Gateway metrics, Prometheus target snapshots, and gateway timing summaries were saved after benchmark runs.
+     - A pooled-client gateway run showed the gateway path matching the direct vLLM TTFT profile much more closely than the earlier unpooled gateway run, making the client-connection overhead visible as measured evidence.
    - Why: every stage must produce runnable/deployable code, a reproducible benchmark command, saved artifacts, and interpretation.
    - Implication: backend engine latency/throughput, direct vLLM serving,
      gateway serving, gateway metrics, backend usage, and GPU metrics are kept
