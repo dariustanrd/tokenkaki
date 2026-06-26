@@ -103,6 +103,15 @@ RESULT_FILENAME=vllm-gateway-serving-smoke.json \
 ./benchmarks/vllm-serving-bench.sh
 ```
 
+Gateway timing summary from a saved metrics snapshot:
+
+```bash
+python3 benchmarks/gateway-timing-summary.py \
+  --benchmark-json experiments/2_vllm_0.19_Qwen3-8B/5_gateway_serve_gateway-timed/vllm-gateway-serving-qwen3-8b-a100-gateway-timed.json \
+  --metrics-prom experiments/2_vllm_0.19_Qwen3-8B/5_gateway_serve_gateway-timed/gateway-metrics-after-benchmark.prom \
+  --output experiments/2_vllm_0.19_Qwen3-8B/5_gateway_serve_gateway-timed/gateway-timing-summary.json
+```
+
 The default output path is:
 
 ```text

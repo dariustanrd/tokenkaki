@@ -52,6 +52,26 @@ STREAM_DURATION_SECONDS = Histogram(
     "Gateway-observed chat completion stream duration in seconds.",
     ("selected_backend", "routing_policy", "stream_status", "error_class"),
 )
+STREAM_BACKEND_OPEN_SECONDS = Histogram(
+    "tokenkaki_gateway_stream_backend_open_seconds",
+    "Time from starting a backend stream request until backend response headers are received.",
+    ("selected_backend", "routing_policy"),
+)
+STREAM_FIRST_BACKEND_CHUNK_SECONDS = Histogram(
+    "tokenkaki_gateway_stream_first_backend_chunk_seconds",
+    "Time from backend response headers until the first backend stream chunk is received.",
+    ("selected_backend", "routing_policy"),
+)
+STREAM_FIRST_CLIENT_CHUNK_SECONDS = Histogram(
+    "tokenkaki_gateway_stream_first_client_chunk_seconds",
+    "Gateway-observed time from request receipt until the first stream chunk is yielded to the client.",
+    ("selected_backend", "routing_policy"),
+)
+STREAM_FIRST_CHUNK_RELAY_SECONDS = Histogram(
+    "tokenkaki_gateway_stream_first_chunk_relay_seconds",
+    "Time between receiving the first backend stream chunk and yielding it to the client.",
+    ("selected_backend", "routing_policy"),
+)
 TOKEN_COUNT = Counter(
     "tokenkaki_gateway_backend_tokens_total",
     "Backend-reported token counts observed by the gateway.",
@@ -107,6 +127,7 @@ def create_app(config_path: str | None = None) -> FastAPI:
 
     @app.post("/v1/chat/completions")
     async def chat_completions(request: Request) -> Response:
+        request_received_at = time.perf_counter()
         body = await request.json()
         if not isinstance(body, dict):
             return _error_response("invalid_request_error", "request body must be a JSON object", 400)
@@ -121,7 +142,7 @@ def create_app(config_path: str | None = None) -> FastAPI:
             return _error_response("invalid_request_error", f"unknown or disabled model: {model}", 404)
 
         if body.get("stream") is True:
-            return await _stream_chat_completion(request, route, body)
+            return await _stream_chat_completion(request, route, body, request_received_at)
 
         try:
             backend_response = await forward_chat_completion(
@@ -184,11 +205,17 @@ def create_app(config_path: str | None = None) -> FastAPI:
 app = create_app()
 
 
-async def _stream_chat_completion(request: Request, route: ModelRoute, body: dict[str, Any]) -> Response:
+async def _stream_chat_completion(
+    request: Request,
+    route: ModelRoute,
+    body: dict[str, Any],
+    request_received_at: float,
+) -> Response:
     stream_started_at = time.perf_counter()
     exit_stack = AsyncExitStack()
 
     try:
+        backend_open_started_at = time.perf_counter()
         backend_stream = await exit_stack.enter_async_context(
             open_chat_completion_stream(
                 route,
@@ -196,6 +223,7 @@ async def _stream_chat_completion(request: Request, route: ModelRoute, body: dic
                 request_id=request.state.request_id,
             )
         )
+        backend_headers_received_at = time.perf_counter()
     except BackendTimeout:
         LOGGER.warning(
             "backend_stream_timeout_before_headers",
@@ -235,12 +263,29 @@ async def _stream_chat_completion(request: Request, route: ModelRoute, body: dic
             "routing_policy": route.routing_policy,
         },
     )
+    STREAM_BACKEND_OPEN_SECONDS.labels(route.backend_base_url, route.routing_policy).observe(
+        backend_headers_received_at - backend_open_started_at
+    )
 
     async def stream_body():
         status = "completed"
         error_class = None
+        first_chunk_observed = False
         try:
             async for chunk in backend_stream.chunks:
+                if not first_chunk_observed:
+                    first_backend_chunk_at = time.perf_counter()
+                    first_client_chunk_yielded_at = time.perf_counter()
+                    STREAM_FIRST_BACKEND_CHUNK_SECONDS.labels(route.backend_base_url, route.routing_policy).observe(
+                        first_backend_chunk_at - backend_headers_received_at
+                    )
+                    STREAM_FIRST_CLIENT_CHUNK_SECONDS.labels(route.backend_base_url, route.routing_policy).observe(
+                        first_client_chunk_yielded_at - request_received_at
+                    )
+                    STREAM_FIRST_CHUNK_RELAY_SECONDS.labels(route.backend_base_url, route.routing_policy).observe(
+                        first_client_chunk_yielded_at - first_backend_chunk_at
+                    )
+                    first_chunk_observed = True
                 yield chunk
         except asyncio.CancelledError:
             status = "client_disconnected"

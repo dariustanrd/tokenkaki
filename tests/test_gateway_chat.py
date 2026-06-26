@@ -115,7 +115,7 @@ def test_chat_completion_streams_backend_sse(monkeypatch) -> None:
         "/v1/chat/completions",
         headers={"x-request-id": "req-stream-123"},
         json={
-            "model": "qwen3-0.6b",
+            "model": "qwen3-8b",
             "stream": True,
             "messages": [{"role": "user", "content": "hi"}],
             "chat_template_kwargs": {"enable_thinking": False},
@@ -130,14 +130,54 @@ def test_chat_completion_streams_backend_sse(monkeypatch) -> None:
         b'data: {"choices":[{"delta":{"content":"answer"}}]}\n\n'
         b"data: [DONE]\n\n"
     )
-    assert captured["route"].backend_model == "Qwen/Qwen3-0.6B"
+    assert captured["route"].backend_model == "Qwen/Qwen3-8B"
     assert captured["body"] == {
-        "model": "qwen3-0.6b",
+        "model": "qwen3-8b",
         "stream": True,
         "messages": [{"role": "user", "content": "hi"}],
         "chat_template_kwargs": {"enable_thinking": False},
     }
     assert captured["request_id"] == "req-stream-123"
+
+
+def test_chat_completion_stream_records_first_chunk_metrics(monkeypatch) -> None:
+    async def chunks() -> AsyncIterator[bytes]:
+        yield b'data: {"choices":[{"delta":{"content":"answer"}}]}\n\n'
+        yield b"data: [DONE]\n\n"
+
+    @asynccontextmanager
+    async def fake_open_chat_completion_stream(
+        route: ModelRoute,
+        body: dict[str, Any],
+        request_id: str,
+    ) -> AsyncIterator[BackendStreamResponse]:
+        yield BackendStreamResponse(
+            status_code=200,
+            media_type="text/event-stream",
+            chunks=chunks(),
+        )
+
+    monkeypatch.setattr(gateway_app_module, "open_chat_completion_stream", fake_open_chat_completion_stream)
+    client = TestClient(create_app())
+
+    with client.stream(
+        "POST",
+        "/v1/chat/completions",
+        json={
+            "model": "qwen3-8b",
+            "stream": True,
+            "messages": [{"role": "user", "content": "hi"}],
+        },
+    ) as response:
+        response.read()
+    metrics_response = client.get("/metrics")
+
+    assert response.status_code == 200
+    assert "tokenkaki_gateway_stream_backend_open_seconds" in metrics_response.text
+    assert "tokenkaki_gateway_stream_first_backend_chunk_seconds" in metrics_response.text
+    assert "tokenkaki_gateway_stream_first_client_chunk_seconds" in metrics_response.text
+    assert "tokenkaki_gateway_stream_first_chunk_relay_seconds" in metrics_response.text
+    assert 'routing_policy="static_single_backend",selected_backend="http://127.0.0.1:8001"' in metrics_response.text
 
 
 def test_chat_completion_maps_backend_timeout(monkeypatch) -> None:
@@ -153,7 +193,7 @@ def test_chat_completion_maps_backend_timeout(monkeypatch) -> None:
 
     response = client.post(
         "/v1/chat/completions",
-        json={"model": "qwen3-0.6b", "messages": [{"role": "user", "content": "hi"}]},
+        json={"model": "qwen3-8b", "messages": [{"role": "user", "content": "hi"}]},
     )
 
     assert response.status_code == 504
@@ -173,7 +213,7 @@ def test_chat_completion_maps_backend_connection_failure(monkeypatch) -> None:
 
     response = client.post(
         "/v1/chat/completions",
-        json={"model": "qwen3-0.6b", "messages": [{"role": "user", "content": "hi"}]},
+        json={"model": "qwen3-8b", "messages": [{"role": "user", "content": "hi"}]},
     )
 
     assert response.status_code == 502
@@ -197,7 +237,7 @@ def test_chat_completion_records_backend_tokens_and_chat_metrics(monkeypatch) ->
 
     chat_response = client.post(
         "/v1/chat/completions",
-        json={"model": "qwen3-0.6b", "messages": [{"role": "user", "content": "hi"}]},
+        json={"model": "qwen3-8b", "messages": [{"role": "user", "content": "hi"}]},
     )
     metrics_response = client.get("/metrics")
 

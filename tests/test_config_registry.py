@@ -62,13 +62,13 @@ models:
 def test_registry_resolves_enabled_alias_to_backend_route() -> None:
     config = load_config()
 
-    route = resolve_model(config, "qwen3-0.6b")
+    route = resolve_model(config, "qwen3-8b")
 
     assert route is not None
-    assert route.public_model == "qwen3-0.6b"
+    assert route.public_model == "qwen3-8b"
     assert route.backend_type == "vllm"
     assert route.backend_base_url == "http://127.0.0.1:8001"
-    assert route.backend_model == "Qwen/Qwen3-0.6B"
+    assert route.backend_model == "Qwen/Qwen3-8B"
     assert route.routing_policy == "static_single_backend"
 
 
