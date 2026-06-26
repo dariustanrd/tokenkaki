@@ -40,6 +40,7 @@ async def forward_chat_completion(
     request_id: str,
     timeout_seconds: float = 60.0,
     transport: httpx.AsyncBaseTransport | None = None,
+    client: httpx.AsyncClient | None = None,
 ) -> BackendResponse:
     """Forward a non-streaming OpenAI chat completion body to vLLM."""
     forwarded_body = dict(body)
@@ -47,7 +48,14 @@ async def forward_chat_completion(
     url = f"{route.backend_base_url.rstrip('/')}/v1/chat/completions"
 
     try:
-        async with httpx.AsyncClient(timeout=timeout_seconds, transport=transport) as client:
+        if client is None:
+            async with httpx.AsyncClient(timeout=timeout_seconds, transport=transport) as request_client:
+                response = await request_client.post(
+                    url,
+                    json=forwarded_body,
+                    headers={"x-request-id": request_id},
+                )
+        else:
             response = await client.post(
                 url,
                 json=forwarded_body,
@@ -72,13 +80,17 @@ async def open_chat_completion_stream(
     request_id: str,
     timeout_seconds: float = 60.0,
     transport: httpx.AsyncBaseTransport | None = None,
+    client: httpx.AsyncClient | None = None,
 ) -> AsyncIterator[BackendStreamResponse]:
     """Open a streaming OpenAI chat completion request to vLLM."""
     forwarded_body = dict(body)
     forwarded_body["model"] = route.backend_model
     url = f"{route.backend_base_url.rstrip('/')}/v1/chat/completions"
 
-    client = httpx.AsyncClient(timeout=timeout_seconds, transport=transport)
+    owns_client = client is None
+    if client is None:
+        client = httpx.AsyncClient(timeout=timeout_seconds, transport=transport)
+
     try:
         try:
             stream_context = client.stream(
@@ -102,4 +114,5 @@ async def open_chat_completion_stream(
         finally:
             await stream_context.__aexit__(None, None, None)
     finally:
-        await client.aclose()
+        if owns_client:
+            await client.aclose()

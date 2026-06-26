@@ -83,6 +83,14 @@ def create_app(config_path: str | None = None) -> FastAPI:
     """Create the Milestone 1 gateway application."""
     app = FastAPI(title="tokenkaki gateway", version="0.1.0")
     app.state.config = load_config(config_path or os.getenv("TOKENKAKI_CONFIG"))
+    app.state.backend_http_client = None
+
+    async def close_backend_http_client() -> None:
+        client = app.state.backend_http_client
+        if client is not None:
+            await client.aclose()
+
+    app.router.add_event_handler("shutdown", close_backend_http_client)
 
     @app.middleware("http")
     async def observe_requests(request: Request, call_next) -> Response:
@@ -149,6 +157,7 @@ def create_app(config_path: str | None = None) -> FastAPI:
                 route,
                 body,
                 request_id=request.state.request_id,
+                client=_get_backend_http_client(request.app),
             )
         except BackendTimeout:
             LOGGER.warning(
@@ -205,6 +214,14 @@ def create_app(config_path: str | None = None) -> FastAPI:
 app = create_app()
 
 
+def _get_backend_http_client(app: FastAPI) -> httpx.AsyncClient:
+    client = app.state.backend_http_client
+    if client is None or client.is_closed:
+        client = httpx.AsyncClient(timeout=60.0)
+        app.state.backend_http_client = client
+    return client
+
+
 async def _stream_chat_completion(
     request: Request,
     route: ModelRoute,
@@ -221,6 +238,7 @@ async def _stream_chat_completion(
                 route,
                 body,
                 request_id=request.state.request_id,
+                client=_get_backend_http_client(request.app),
             )
         )
         backend_headers_received_at = time.perf_counter()

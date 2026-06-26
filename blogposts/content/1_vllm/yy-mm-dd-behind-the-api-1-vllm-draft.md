@@ -799,7 +799,7 @@ from this result, we can see that:
 - `backend_open` 
   - mean is `38.9ms`.
     - this is the time from "gateway starts opening the backend stream" to "gateway receives backend response headers".
-    - this includes the extra HTTP hop from the gateway container to `host.docker.internal:8001`, the `httpx` stream setup, and whatever vLLM needs to accept the request and return headers.
+    - this includes the creation of a fresh `httpx.AsyncClient` every request, the extra HTTP hop from the gateway container to `host.docker.internal:8001`, the `httpx` stream setup, and whatever vLLM needs to accept the request and return headers.
     - this number is very close to the average TTFT delta between direct vLLM and gateway serving:
       - direct vLLM mean TTFT: `50.08ms`
       - gateway mean TTFT: `87.75ms`
@@ -819,16 +819,16 @@ from this result, we can see that:
   - this part is mostly vLLM-side work after request admission: scheduling, prefill/first-token work, and getting the first chunk into the stream.
   - this is not "gateway overhead" in the same way as `backend_open`; it is still on the serving path, but it belongs to the backend response phase.
 
-- `first_client_chunk` 
-  - mean is `84.14ms`.
-  - this is the gateway-observed first-token time from request receipt to the first chunk being yielded back to the benchmark client.
-  - it lines up with the benchmark-observed mean TTFT of `87.75ms`, which is good. it means our gateway-side metrics are measuring the same shape as the external benchmark, with a few ms of client/network measurement difference.
-
 - `first_chunk_relay` 
   - mean is effectively `0ms`.
   - once the gateway receives the first backend chunk, yielding it back to the client is not where the extra TTFT is going.
   - so the first conclusion is not "Python streaming is slow".
   - the better conclusion is: the extra TTFT comes before the first chunk reaches the gateway, especially from opening the backend stream.
+
+- `first_client_chunk` 
+  - mean is `84.14ms`.
+  - this is the gateway-observed first-token time from request receipt to the first chunk being yielded back to the benchmark client.
+  - it lines up with the benchmark-observed mean TTFT of `87.75ms`, which is good. it means our gateway-side metrics are measuring the same shape as the external benchmark, with a few ms of client/network measurement difference.
 
 Therefore, from this we can conclude that:
 
@@ -836,6 +836,100 @@ Therefore, from this we can conclude that:
 - Adding the gateway keeps throughput and TPOT basically the same for this workload.
 - Adding the gateway increases TTFT by around `38ms` on average.
 - The new gateway timing metrics show that this average increase is almost exactly the `backend_open` stage.
+
+next question is: given that we have this overhead added in backend_open, what can we do to reduce this?
+likely cause of the overhead should be the multiple creations of a new http client per request.
+what we can do to resolve this is to add a gateway-owned shared httpx.AsyncClient on app startup/lifespan.
+
+Added new logic for shared `httpx.AsyncClient` per gateway process, instead of creating a fresh client on every forwarded request.
+
+rerunning the same benchmark again under `6_gateway_serve_pooled-client`, we get:
+
+```text
+---------------Time to First Token----------------
+Mean TTFT (ms):                          51.85
+Median TTFT (ms):                        50.13
+P99 TTFT (ms):                           84.31
+```
+
+and from the gateway timing summary:
+
+```json
+"gateway_stream_timing_ms": {
+  "backend_open": {
+    "count": 100.0,
+    "mean_ms": 7.331884279847145
+  },
+  "first_backend_chunk": {
+    "count": 100.0,
+    "mean_ms": 42.31208797544241
+  },
+  "first_client_chunk": {
+    "count": 100.0,
+    "mean_ms": 49.89084303379059
+  },
+  "first_chunk_relay": {
+    "count": 100.0,
+    "mean_ms": 0.0002800673246383667
+  }
+}
+```
+
+from this result, we can see that:
+
+- `backend_open`
+  - improved from `38.9ms` to `7.33ms`.
+  - this is a reduction of around `31.6ms`.
+  - this is the stage that changed the most after adding a shared backend client.
+- `first_backend_chunk`
+  - stayed roughly the same:
+    - before: `44.26ms`
+    - after: `42.31ms`
+  - this means the vLLM-side first-token phase did not materially change.
+- `first_chunk_relay`
+  - remained effectively `0ms`.
+  - so again, the Python async streaming relay is not where the cost is.
+- `first_client_chunk`
+  - improved from `84.14ms` to `49.89ms`.
+  - this lines up with the benchmark-observed TTFT improvement:
+    - before pooled client: `87.75ms`
+    - after pooled client: `51.85ms`
+
+Therefore, from this experiment we can conclude that:
+
+- The extra gateway TTFT was mostly self-inflicted by per-request backend HTTP client/connection setup.
+- Reusing a gateway-owned `httpx.AsyncClient` removes most of that overhead.
+- The gateway path now has TTFT much closer to direct vLLM serving:
+  - direct vLLM mean TTFT: `50.08ms`
+  - gateway with pooled client mean TTFT: `51.85ms`
+  - remaining mean delta: `1.77ms`
+- TPOT and throughput remain basically unchanged, which is what we want. We improved the request-open path without changing the model serving phase.
+
+does this make sense for actual prod serving?
+
+yes, this is closer to what a real production gateway should do.
+
+Creating a new HTTP client per request is usually not the right production shape. The client owns connection pools, keepalive behavior, socket reuse, and pool-level limits. If we recreate it every request, we throw away the main thing that makes the backend HTTP hop cheap.
+
+But the production version should be a little more explicit than the current experiment code:
+- create one shared async client per gateway process, or one per backend/upstream pool.
+- create it during app startup/lifespan, and close it during shutdown.
+- configure explicit connection limits:
+  - max total connections
+  - max keepalive connections
+  - keepalive expiry
+- configure explicit timeouts:
+  - connect timeout
+  - read timeout
+  - write timeout
+  - pool timeout
+- expose metrics for backend open time, backend read time, pool pressure, errors, and timeout classes.
+- if the gateway has multiple backend replicas later, use separate pools per backend target or per routing group instead of one anonymous global client.
+
+The conclusion is:
+- naive gateway: creates a new backend client every request, adds ~`38ms` mean TTFT.
+- pooled gateway: reuses backend HTTP connections, adds only ~`1-2ms` mean TTFT over direct vLLM for this benchmark.
+- for production, a pooled async backend client is the correct direction, but it should become an explicit, configured gateway resource rather than an accidental global.
 
 ---
 

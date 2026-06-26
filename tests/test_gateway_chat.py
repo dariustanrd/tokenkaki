@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
+import httpx
 from fastapi.testclient import TestClient
 
 from tokenkaki.backend import (
@@ -37,10 +38,12 @@ models:
         route: ModelRoute,
         body: dict[str, Any],
         request_id: str,
+        client: httpx.AsyncClient | None = None,
     ) -> BackendResponse:
         captured["route"] = route
         captured["body"] = body
         captured["request_id"] = request_id
+        captured["client"] = client
         return BackendResponse(
             status_code=200,
             content=b'{"id":"chatcmpl-test","object":"chat.completion"}',
@@ -70,6 +73,42 @@ models:
         "temperature": 0,
     }
     assert captured["request_id"] == "req-chat-123"
+    assert isinstance(captured["client"], httpx.AsyncClient)
+
+
+def test_chat_completion_reuses_backend_http_client(monkeypatch) -> None:
+    captured_clients: list[httpx.AsyncClient | None] = []
+
+    async def fake_forward_chat_completion(
+        route: ModelRoute,
+        body: dict[str, Any],
+        request_id: str,
+        client: httpx.AsyncClient | None = None,
+    ) -> BackendResponse:
+        captured_clients.append(client)
+        return BackendResponse(
+            status_code=200,
+            content=b'{"id":"chatcmpl-test","object":"chat.completion"}',
+            media_type="application/json",
+        )
+
+    monkeypatch.setattr(gateway_app_module, "forward_chat_completion", fake_forward_chat_completion)
+
+    with TestClient(create_app()) as client:
+        first_response = client.post(
+            "/v1/chat/completions",
+            json={"model": "qwen3-8b", "messages": [{"role": "user", "content": "hi"}]},
+        )
+        second_response = client.post(
+            "/v1/chat/completions",
+            json={"model": "qwen3-8b", "messages": [{"role": "user", "content": "again"}]},
+        )
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+    assert len(captured_clients) == 2
+    assert captured_clients[0] is not None
+    assert captured_clients[0] is captured_clients[1]
 
 
 def test_chat_completion_rejects_unknown_model() -> None:
@@ -97,10 +136,12 @@ def test_chat_completion_streams_backend_sse(monkeypatch) -> None:
         route: ModelRoute,
         body: dict[str, Any],
         request_id: str,
+        client: httpx.AsyncClient | None = None,
     ) -> AsyncIterator[BackendStreamResponse]:
         captured["route"] = route
         captured["body"] = body
         captured["request_id"] = request_id
+        captured["client"] = client
         yield BackendStreamResponse(
             status_code=200,
             media_type="text/event-stream",
@@ -138,6 +179,7 @@ def test_chat_completion_streams_backend_sse(monkeypatch) -> None:
         "chat_template_kwargs": {"enable_thinking": False},
     }
     assert captured["request_id"] == "req-stream-123"
+    assert isinstance(captured["client"], httpx.AsyncClient)
 
 
 def test_chat_completion_stream_records_first_chunk_metrics(monkeypatch) -> None:
@@ -150,6 +192,7 @@ def test_chat_completion_stream_records_first_chunk_metrics(monkeypatch) -> None
         route: ModelRoute,
         body: dict[str, Any],
         request_id: str,
+        client: httpx.AsyncClient | None = None,
     ) -> AsyncIterator[BackendStreamResponse]:
         yield BackendStreamResponse(
             status_code=200,
@@ -185,6 +228,7 @@ def test_chat_completion_maps_backend_timeout(monkeypatch) -> None:
         route: ModelRoute,
         body: dict[str, Any],
         request_id: str,
+        client: httpx.AsyncClient | None = None,
     ) -> BackendResponse:
         raise BackendTimeout()
 
@@ -205,6 +249,7 @@ def test_chat_completion_maps_backend_connection_failure(monkeypatch) -> None:
         route: ModelRoute,
         body: dict[str, Any],
         request_id: str,
+        client: httpx.AsyncClient | None = None,
     ) -> BackendResponse:
         raise BackendConnectionFailure()
 
@@ -225,6 +270,7 @@ def test_chat_completion_records_backend_tokens_and_chat_metrics(monkeypatch) ->
         route: ModelRoute,
         body: dict[str, Any],
         request_id: str,
+        client: httpx.AsyncClient | None = None,
     ) -> BackendResponse:
         return BackendResponse(
             status_code=200,

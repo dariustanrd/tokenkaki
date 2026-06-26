@@ -1,0 +1,224 @@
+# HELP python_gc_objects_collected_total Objects collected during gc
+# TYPE python_gc_objects_collected_total counter
+python_gc_objects_collected_total{generation="0"} 17034.0
+python_gc_objects_collected_total{generation="1"} 4379.0
+python_gc_objects_collected_total{generation="2"} 0.0
+# HELP python_gc_objects_uncollectable_total Uncollectable objects found during GC
+# TYPE python_gc_objects_uncollectable_total counter
+python_gc_objects_uncollectable_total{generation="0"} 0.0
+python_gc_objects_uncollectable_total{generation="1"} 0.0
+python_gc_objects_uncollectable_total{generation="2"} 0.0
+# HELP python_gc_collections_total Number of times this generation was collected
+# TYPE python_gc_collections_total counter
+python_gc_collections_total{generation="0"} 67.0
+python_gc_collections_total{generation="1"} 6.0
+python_gc_collections_total{generation="2"} 0.0
+# HELP python_info Python platform information
+# TYPE python_info gauge
+python_info{implementation="CPython",major="3",minor="13",patchlevel="11",version="3.13.11"} 1.0
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 3.75689216e+08
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 6.5908736e+07
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.78246327414e+09
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 4.5600000000000005
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 27.0
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 1.048576e+06
+# HELP tokenkaki_gateway_requests_total Gateway-observed HTTP requests.
+# TYPE tokenkaki_gateway_requests_total counter
+tokenkaki_gateway_requests_total{method="GET",path="/healthz",status="200"} 22.0
+tokenkaki_gateway_requests_total{method="GET",path="/metrics",status="200"} 48.0
+tokenkaki_gateway_requests_total{method="POST",path="/v1/chat/completions",status="200"} 200.0
+# HELP tokenkaki_gateway_requests_created Gateway-observed HTTP requests.
+# TYPE tokenkaki_gateway_requests_created gauge
+tokenkaki_gateway_requests_created{method="GET",path="/healthz",status="200"} 1.7824632797699296e+09
+tokenkaki_gateway_requests_created{method="GET",path="/metrics",status="200"} 1.7824632877012286e+09
+tokenkaki_gateway_requests_created{method="POST",path="/v1/chat/completions",status="200"} 1.7824633575514605e+09
+# HELP tokenkaki_gateway_request_latency_seconds Gateway-observed HTTP request latency in seconds.
+# TYPE tokenkaki_gateway_request_latency_seconds histogram
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.005",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.01",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.025",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.05",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.075",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.1",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.25",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.5",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.75",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="1.0",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="2.5",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="5.0",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="7.5",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="10.0",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="+Inf",method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_count{method="GET",path="/healthz"} 22.0
+tokenkaki_gateway_request_latency_seconds_sum{method="GET",path="/healthz"} 0.0074954405426979065
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.005",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.01",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.025",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.05",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.075",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.1",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.25",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.5",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.75",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="1.0",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="2.5",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="5.0",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="7.5",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="10.0",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="+Inf",method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_count{method="GET",path="/metrics"} 48.0
+tokenkaki_gateway_request_latency_seconds_sum{method="GET",path="/metrics"} 0.1067667305469513
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.005",method="POST",path="/v1/chat/completions"} 4.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.01",method="POST",path="/v1/chat/completions"} 195.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.025",method="POST",path="/v1/chat/completions"} 199.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.05",method="POST",path="/v1/chat/completions"} 199.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.075",method="POST",path="/v1/chat/completions"} 199.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.1",method="POST",path="/v1/chat/completions"} 199.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.25",method="POST",path="/v1/chat/completions"} 200.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.5",method="POST",path="/v1/chat/completions"} 200.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="0.75",method="POST",path="/v1/chat/completions"} 200.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="1.0",method="POST",path="/v1/chat/completions"} 200.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="2.5",method="POST",path="/v1/chat/completions"} 200.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="5.0",method="POST",path="/v1/chat/completions"} 200.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="7.5",method="POST",path="/v1/chat/completions"} 200.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="10.0",method="POST",path="/v1/chat/completions"} 200.0
+tokenkaki_gateway_request_latency_seconds_bucket{le="+Inf",method="POST",path="/v1/chat/completions"} 200.0
+tokenkaki_gateway_request_latency_seconds_count{method="POST",path="/v1/chat/completions"} 200.0
+tokenkaki_gateway_request_latency_seconds_sum{method="POST",path="/v1/chat/completions"} 1.4343969486653805
+# HELP tokenkaki_gateway_request_latency_seconds_created Gateway-observed HTTP request latency in seconds.
+# TYPE tokenkaki_gateway_request_latency_seconds_created gauge
+tokenkaki_gateway_request_latency_seconds_created{method="GET",path="/healthz"} 1.7824632797699559e+09
+tokenkaki_gateway_request_latency_seconds_created{method="GET",path="/metrics"} 1.7824632877012467e+09
+tokenkaki_gateway_request_latency_seconds_created{method="POST",path="/v1/chat/completions"} 1.7824633575514753e+09
+# HELP tokenkaki_gateway_chat_completions_total Gateway-observed chat completion requests.
+# TYPE tokenkaki_gateway_chat_completions_total counter
+tokenkaki_gateway_chat_completions_total{error_class="none",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",status="200"} 200.0
+# HELP tokenkaki_gateway_chat_completions_created Gateway-observed chat completion requests.
+# TYPE tokenkaki_gateway_chat_completions_created gauge
+tokenkaki_gateway_chat_completions_created{error_class="none",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",status="200"} 1.7824633575512397e+09
+# HELP tokenkaki_gateway_backend_errors_total Gateway-observed backend errors.
+# TYPE tokenkaki_gateway_backend_errors_total counter
+# HELP tokenkaki_gateway_stream_duration_seconds Gateway-observed chat completion stream duration in seconds.
+# TYPE tokenkaki_gateway_stream_duration_seconds histogram
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="0.005",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 0.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="0.01",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 0.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="0.025",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 0.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="0.05",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 0.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="0.075",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 0.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="0.1",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 0.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="0.25",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 0.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="0.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 0.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="0.75",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 0.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="1.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 199.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="2.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 200.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="5.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 200.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="7.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 200.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="10.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 200.0
+tokenkaki_gateway_stream_duration_seconds_bucket{error_class="none",le="+Inf",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 200.0
+tokenkaki_gateway_stream_duration_seconds_count{error_class="none",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 200.0
+tokenkaki_gateway_stream_duration_seconds_sum{error_class="none",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 178.74229757115245
+# HELP tokenkaki_gateway_stream_duration_seconds_created Gateway-observed chat completion stream duration in seconds.
+# TYPE tokenkaki_gateway_stream_duration_seconds_created gauge
+tokenkaki_gateway_stream_duration_seconds_created{error_class="none",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001",stream_status="completed"} 1.7824633585352612e+09
+# HELP tokenkaki_gateway_stream_backend_open_seconds Time from starting a backend stream request until backend response headers are received.
+# TYPE tokenkaki_gateway_stream_backend_open_seconds histogram
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="0.005",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 18.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="0.01",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 197.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="0.025",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 199.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="0.05",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 199.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="0.075",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 199.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="0.1",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 199.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="0.25",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="0.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="0.75",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="1.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="2.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="5.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="7.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="10.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_backend_open_seconds_bucket{le="+Inf",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_backend_open_seconds_count{routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_backend_open_seconds_sum{routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 1.3040625154972076
+# HELP tokenkaki_gateway_stream_backend_open_seconds_created Time from starting a backend stream request until backend response headers are received.
+# TYPE tokenkaki_gateway_stream_backend_open_seconds_created gauge
+tokenkaki_gateway_stream_backend_open_seconds_created{routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 1.7824633575511887e+09
+# HELP tokenkaki_gateway_stream_first_backend_chunk_seconds Time from backend response headers until the first backend stream chunk is received.
+# TYPE tokenkaki_gateway_stream_first_backend_chunk_seconds histogram
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="0.005",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 0.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="0.01",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 0.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="0.025",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 3.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="0.05",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 190.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="0.075",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="0.1",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="0.25",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="0.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="0.75",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="1.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="2.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="5.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="7.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="10.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_bucket{le="+Inf",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_count{routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_backend_chunk_seconds_sum{routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 7.61732642352581
+# HELP tokenkaki_gateway_stream_first_backend_chunk_seconds_created Time from backend response headers until the first backend stream chunk is received.
+# TYPE tokenkaki_gateway_stream_first_backend_chunk_seconds_created gauge
+tokenkaki_gateway_stream_first_backend_chunk_seconds_created{routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 1.7824633576068194e+09
+# HELP tokenkaki_gateway_stream_first_client_chunk_seconds Gateway-observed time from request receipt until the first stream chunk is yielded to the client.
+# TYPE tokenkaki_gateway_stream_first_client_chunk_seconds histogram
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="0.005",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 0.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="0.01",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 0.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="0.025",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 1.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="0.05",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 159.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="0.075",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 198.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="0.1",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 199.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="0.25",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="0.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="0.75",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="1.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="2.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="5.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="7.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="10.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_bucket{le="+Inf",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_count{routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_client_chunk_seconds_sum{routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 8.973443243652582
+# HELP tokenkaki_gateway_stream_first_client_chunk_seconds_created Gateway-observed time from request receipt until the first stream chunk is yielded to the client.
+# TYPE tokenkaki_gateway_stream_first_client_chunk_seconds_created gauge
+tokenkaki_gateway_stream_first_client_chunk_seconds_created{routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 1.7824633576068535e+09
+# HELP tokenkaki_gateway_stream_first_chunk_relay_seconds Time between receiving the first backend stream chunk and yielding it to the client.
+# TYPE tokenkaki_gateway_stream_first_chunk_relay_seconds histogram
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="0.005",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="0.01",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="0.025",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="0.05",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="0.075",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="0.1",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="0.25",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="0.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="0.75",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="1.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="2.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="5.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="7.5",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="10.0",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_bucket{le="+Inf",routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_count{routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 200.0
+tokenkaki_gateway_stream_first_chunk_relay_seconds_sum{routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 5.21540641784668e-05
+# HELP tokenkaki_gateway_stream_first_chunk_relay_seconds_created Time between receiving the first backend stream chunk and yielding it to the client.
+# TYPE tokenkaki_gateway_stream_first_chunk_relay_seconds_created gauge
+tokenkaki_gateway_stream_first_chunk_relay_seconds_created{routing_policy="static_single_backend",selected_backend="http://host.docker.internal:8001"} 1.7824633576068826e+09
+# HELP tokenkaki_gateway_backend_tokens_total Backend-reported token counts observed by the gateway.
+# TYPE tokenkaki_gateway_backend_tokens_total counter
