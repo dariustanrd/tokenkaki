@@ -80,6 +80,10 @@ Each doc has one canonical job:
   contract for the vLLM gateway baseline.
 - [Milestone 1 plan](docs/milestones/001_plan.md): tracer-bullet execution
   status and acceptance checks.
+- [Milestone 2 design](docs/milestones/002_routing_policy_comparison.md): stable
+  contract for real-backend routing policy comparison.
+- [Milestone 2 plan](docs/milestones/002_plan.md): tracer-bullet execution plan
+  and acceptance checks.
 - [Experiments](docs/EXPERIMENTS.md): stage definition of done, metric
   provenance, artifact layout, and report template.
 - [Benchmarks](benchmarks/README.md): reusable benchmark wrapper usage.

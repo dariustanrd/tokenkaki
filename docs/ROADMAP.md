@@ -95,6 +95,12 @@ Outputs:
 Learning objective: understand why LLM routing is not the same as ordinary HTTP
 load balancing.
 
+Detailed design:
+[`docs/milestones/002_routing_policy_comparison.md`](milestones/002_routing_policy_comparison.md).
+
+Execution plan:
+[`docs/milestones/002_plan.md`](milestones/002_plan.md).
+
 Future-fabric intuition: this is the first step toward fleet routing. Keep the
 implementation focused on real backend replicas and simple policies, but avoid
 hardcoding assumptions that a model has only one backend URL forever.
@@ -112,17 +118,28 @@ Outputs:
 ## Milestone 3: Batching And Serving Tuning
 
 Learning objective: measure how vLLM serving parameters and workload shape
-affect latency and throughput.
+affect latency and throughput, including the impact of supported vLLM attention
+backends such as FlashAttention, FlashInfer, Triton attention, and FlexAttention.
 
 Future-fabric intuition: this stage explains why token profiles matter. A later
 agent-aware scheduler can only be meaningful if earlier benchmarks show how
 short prompts, long prompts, long generations, concurrency, and queueing change
 TTFT, TPOT, throughput, and cost.
 
+Attention-backend experiments belong in this milestone because they compare
+runtime/kernel behavior under the same model, GPU, and workload rather than
+routing policy or model-format changes. Save these results under a Milestone 3
+experiment folder such as `experiments/3_vllm_attention_backends_Qwen3-8B/`,
+with one subfolder per backend and a shared environment/configuration record so
+the comparison is reproducible.
+
 Outputs:
 
 - batching and concurrency sweep scripts
+- attention-backend comparison across supported vLLM kernels where available
 - workloads covering short, medium, long-context, and mixed prompts
+- saved backend-specific serving configs, compatibility notes, and environment
+  artifacts
 - result tables and plots
 - writeup explaining throughput/latency tradeoffs and saturation behavior
 
