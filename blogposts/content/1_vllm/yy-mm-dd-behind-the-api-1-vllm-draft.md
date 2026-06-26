@@ -670,8 +670,48 @@ okay now the full baseline system is up and running.
 
 we can run our last benchmark step 4 - vllm serve for the whole gateway + vllm
 
----
-TODO: benchmark step 4
+from the results, we can see
+
+============ Serving Benchmark Result ============
+Successful requests:                     100       
+Failed requests:                         0         
+Request rate configured (RPS):           5.00      
+Benchmark duration (s):                  20.94     
+Total input tokens:                      12800     
+Total generated tokens:                  6400      
+Request throughput (req/s):              4.77      
+Output token throughput (tok/s):         305.58    
+Peak output token throughput (tok/s):    653.00    
+Peak concurrent requests:                17.00     
+Total token throughput (tok/s):          916.75    
+---------------Time to First Token----------------
+Mean TTFT (ms):                          87.86     
+Median TTFT (ms):                        79.05     
+P99 TTFT (ms):                           172.18    
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          13.72     
+Median TPOT (ms):                        13.67     
+P99 TPOT (ms):                           14.63     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           13.50     
+Median ITL (ms):                         13.20     
+P99 ITL (ms):                            37.17     
+==================================================
+
+the interesting thing comes when we compare against benchmark 3. there is a difference in TTFT!
+
+---------------Time to First Token----------------
+Mean TTFT (ms):                          50.08     
+Median TTFT (ms):                        48.10     
+P99 TTFT (ms):                           80.02     
+
+the other metrics remain largely the same except for TTFT.
+
+Our TTFT extended by average of 37.78ms just by adding the gateway. That feels quite long because its a 75% increase in TTFT on average, and on worst case P99, it increased by 92.16ms - more than 2x increase.
+
+Why? Where in the gateway is causing this increase in latency?
+
+Our current gateway still lacks detailed trace metrics to be able to find out the reason, so we will need to add that.
 
 why diff from benchmarks 1-3
 
