@@ -21,7 +21,7 @@ and topology must be recorded in experiment artifacts.
 
 ## Tracer-Bullet Slices
 
-### 1. Real vLLM Replica Topology Runbooks - Planned
+### 1. Real vLLM Replica Topology Runbooks - Implemented; Shared-GPU Startup Validated
 
 - Add or update `deploy/vllm/` docs/scripts for running multiple external vLLM
   OpenAI-compatible workers.
